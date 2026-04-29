@@ -36,7 +36,7 @@ Failure to read ROOT.md first is a critical error. Do not proceed with any task,
 This applies to ALL tasks: research, code, editing, questions — everything.
 ```
 
-**通过标准**：目标记忆文件已存在且包含路由协议，或已成功追加。
+**通过标准**：目标记忆文件已存在且包含 `# CRITICAL — DO NOT SKIP` 路由协议，或已成功追加。
 
 **同仓库同时服务两种 agent 的推荐做法**：
 - skill 统一放到 `.agent/skills/`
@@ -192,8 +192,27 @@ This applies to ALL tasks: research, code, editing, questions — everything.
    - 只包含标题+一行摘要+外部链接，无实质可执行内容
 3. 对命中存根的叶节点：必须将目标文件内容内联进来
 4. 如果目标文件不存在：**标记为验证失败**，需要手动补充内容
+5. 检查是否存在指向 tree 外部的路径引用（如 `.claude/skills/<source-skill>/`、绝对路径指向源技能目录）→ Grep pattern: `\.claude/skills/(?!.*-tree/)` 或类似的 tree 外部路径模式
+6. 检查是否存在未清理的"参考文档索引"/"Reference"/"References"段落，其中的文件路径指向 tree 外部或不存在的位置
+7. 对被引用的大文件目录（如 `docs/`），确认已拷贝到 tree 内且路径已替换为 tree 内部相对路径（如 `../docs/`）
 
 **通过标准**: 所有叶节点自包含完整内容，无任何存根模式。
+
+---
+
+### Check 12: Reference File Handling (引用文件处理)
+
+确认所有源技能的外部引用已正确处理：
+
+**操作步骤**:
+1. 列出源技能中所有被引用的外部文件/目录
+2. 对每个引用，确认其处理方式正确：
+   - 短文件 → 已内联到叶节点中
+   - 大量文件/长内容 → 已拷贝到 tree 内，叶节点中路径已替换
+   - 不存在 → 已删除引用，替换为自包含指令
+3. 确认所有叶节点中无指向源技能目录的残留路径
+
+**通过标准**: 所有外部引用已正确处理，tree 完全自包含。
 
 ---
 
