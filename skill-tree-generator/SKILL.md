@@ -21,7 +21,7 @@ description: Generates, aggregates, and extends modular skill-trees with hierarc
 
 ## Overview
 
-This skill transforms a monolithic skill into a modular, hierarchical skill-tree structure that enables dynamic routing based on user prompts. The generated skill-tree mimics a file system with:
+This skill transforms a monolithic skill or multiple skills into a modular, hierarchical skill-tree structure that enables dynamic routing based on user prompts. The generated skill-tree mimics a file system with:
 
 - **ROOT.md** - Root-level routing protocol; 
 - **ROUTER.md** - Navigation logic at each non-leaf level
@@ -30,10 +30,12 @@ This skill transforms a monolithic skill into a modular, hierarchical skill-tree
 ## When to Use This Skill
 
 Use this skill when:
-- A skill has grown too complex and needs modularization
-- Multiple distinct workflows exist within a single skill
-- Context-aware routing is needed to select appropriate sub-skills
-- Users want to organize capabilities hierarchically
+- A skill has grown too complex and needs modularization into sub-skills with routing
+- Multiple distinct workflows exist within a single skill and context-aware routing is needed
+- Multiple related skills need to be unified under one routing tree with shared capabilities
+- Cross-domain workflows span multiple skills and need coordinated execution
+- Overlapping capabilities across skills need deduplication or disambiguation
+- An existing skill-tree needs new skills or capabilities added incrementally
 
 ---
 
@@ -89,55 +91,13 @@ skill-tree/
 
 ### Mode 1 Step 3: Generate ROOT.md
 
-Generate `ROOT.md` following the template in `references/root_template.md`. Key elements:
-
-```markdown
-# Skill Routing Protocol [MANDATORY]
-在处理任何用户任务之前，必须执行以下路由流程：
-
-## Step 1: L1 路由
-基于用户的 **完整对话历史 + 当前prompt**，判断任务类别。
-然后执行：Read `{skills-dir}/skill-tree/{category}/ROUTER.md`
-（`{skills-dir}` = `.claude/skills` for Claude Code, `.agent/skills` for Codex CLI）
-
-## Step 2: 递归路由
-按照读到的 ROUTER.md 中的指令继续判断，直到遇到包含
-`[LEAF NODE]` 标记的文件，即为最终 skill。
-
-## Step 3: 执行
-完整读取叶节点 SKILL.md，按其规范执行任务。
-
-## 重要约束
-- 路由判断必须考虑对话中已建立的所有上下文约束
-- 如果任务跨越多个类别，并行读取多个叶节点
-
-## 路由追踪 [可选]
-当用户 prompt 包含 **"路由调试"** / **"debug routing"** / **"路由追踪"** 时，激活路由追踪模式：
-1. 在 Step 1 决策后输出：`[Route] ROOT → <module> (<匹配信号>)`
-2. 每个 ROUTER.md 决策后追加：`[Route]   → <capability> [LEAF]`
-3. 到达叶节点后开始执行，不再输出路由信息
-**正常模式**（默认）：不输出任何路由信息，直接执行。
-```
+Read `references/root_template.md` and generate `ROOT.md` following the Single-Skill section template.
 
 ### Mode 1 Step 4: Generate ROUTER.md Files
 
-For each non-leaf level, generate `ROUTER.md` following `references/router_template.md`:
+For each non-leaf level, read `references/router_template.md` and generate `ROUTER.md` following that template.
 
-```markdown
-# {Module Name} Router [Ln]
-
-你已到达 {module} 子树。基于当前任务进一步判断：
-
-| 判断条件 | 下一跳 |
-|---------|--------|
-| {condition1} | Read `./{path1}/ROUTER.md` |
-| {condition2} | Read `./{path2}/SKILL.md` |
-| {condition3} | Read `./{path3}/SKILL.md` |
-
-注意：如果当前对话中用户已明确说明{context_hint}，优先以对话上下文为准。
-```
-
-**Routing Table Guidelines:**
+**Routing Table Guidelines (supplement to template):**
 - Conditions should be mutually exclusive when possible
 - Use keyword matching, domain terminology, task patterns
 - Include "Other/Default" row for fallback
@@ -145,28 +105,13 @@ For each non-leaf level, generate `ROUTER.md` following `references/router_templ
 
 ### Mode 1 Step 5: Generate Leaf SKILL.md Files
 
-**前置检查（新增）**: 对每个叶节点，在生成前先确认源技能内容可获取。
+**前置检查**: 对每个叶节点，在生成前先确认源技能内容可获取。
 
 1. 如果源技能文件不存在 → **报错终止**，列出所有缺失的技能路径
 2. 如果源技能文件存在但内容为空 → **报错终止**
 3. 只有源内容完整可用时，才继续生成
 
-For each leaf node, extract the complete content from the original skill. Do NOT replace any content with a file path reference or external link. Every instruction, code example, API reference, and constraint from the original skill must be inlined directly.
-
-```markdown
-# {Feature Name} [LEAF NODE]
-
-{Specific skill instructions for this capability}
-
-## Workflow
-{Step-by-step instructions}
-
-## Examples
-{Concrete examples of usage}
-
-## Constraints
-{Any limitations or requirements}
-```
+For each leaf node, read `references/leaf_template.md` for the structure template. Extract the complete content from the original skill and fill it into the template. Do NOT replace any content with a file path reference or external link. Every instruction, code example, API reference, and constraint from the original skill must be inlined directly.
 
 ### 容错机制
 
@@ -181,7 +126,7 @@ For each leaf node, extract the complete content from the original skill. Do NOT
 
 If the original skill references an external file, read that file and inline its content into the appropriate leaf node. Do NOT leave a "see file X" reference.
 
-### 引用文件处理流程（L14/L15 预防）
+### 引用文件处理流程
 
 在生成每个叶节点时，必须执行以下引用处理流程：
 
@@ -314,53 +259,11 @@ Classify every capability group:
 
 ### Mode 2 Step D: Multi-Skill ROOT.md Generation
 
-ROOT.md must implement two-phase routing. Follow `references/root_template.md` Multi-Skill section:
-
-```markdown
-## Phase 1: 选 Skill
-
-| 用户意图 | 关键词信号 | 路由目标 |
-|---------|-----------|---------|
-| {Skill_A 能力} | {关键词A}, {skill名A} | Read `./{skill_a}/ROUTER.md` |
-| {Skill_B 能力} | {关键词B}, {skill名B} | Read `./{skill_b}/ROUTER.md` |
-| 共享功能 | {共享词} | Read `./shared/{capability}/SKILL.md` |
-| 跨 skill 工作流 | workflow, pipeline, 组合 | Read `./cross-cutting/SKILL.md` |
-
-## Phase 2: 选能力
-按照 skill 子树的 ROUTER.md 继续路由。
-
-## 消歧规则
-- 提到 **{skill名A}** → `{skill_a}/`
-- 提到 **{skill名B}** → `{skill_b}/`
-- 仅提到 **"{共享关键词}"** → 询问用户选择
-
-### 信号优先级 [L8 预防]
-| 优先级 | 信号类型 | 路由行为 |
-|--------|---------|---------|
-| P1 最高 | Skill 名称 | 直接路由 |
-| P2 | 唯一领域词 | 直接路由 |
-| P3 最低 | 跨领域通用词 | 仅在无 P1/P2 时询问 |
-```
+ROOT.md must implement two-phase routing. Read `references/root_template.md` Multi-Skill section and generate ROOT.md following that template.
 
 ### Mode 2 Step E: Multi-Skill SKILL-TREE.md Overview
 
-The overview must include a skill dimension:
-
-```markdown
-## 能力 → 叶节点映射表
-| Skill | 能力 | 叶节点路径 |
-|-------|------|-----------|
-| skill-a | {capability} | `skill-a/{module}/SKILL.md` |
-| skill-a, skill-b | {shared capability} | `shared/{module}/SKILL.md` |
-
-## Skill 覆盖统计
-| Skill | 叶节点数 |
-|-------|---------|
-| skill-a | N |
-| skill-b | N |
-| shared | N |
-| 总计 | N |
-```
+Read `references/overview_template.md` Multi-Skill section and generate `SKILL-TREE.md`. The overview must include a skill dimension with the 能力→叶节点映射表 and Skill 覆盖统计.
 
 ### Mode 2 Step F: Cross-Cutting Workflows
 
@@ -588,9 +491,9 @@ web-development-tree/
 **问题**: 将两个 skill 的相似能力合并为 Shared-identical 叶节点，但实际指令细节不同。
 **预防**: 只有指令完全一致才能合并为 Shared-identical。有任何差异则分为 Shared-similar 各自独立叶节点。
 
-### L10: 存根问题（合并原 L10 + L12）
+### L10: 存根问题
 
-**问题**: 生成 skill-tree 时，叶节点只生成 stub（标题+分类摘要+指向外部文件的链接），而非内联完整数据或指令。单个 stub 导致该能力不可用（原 L10）；多个叶节点同时被 stub 化则导致整条路径断裂、能力域完全不可用（原 L12）。尤其危险的场景是：技能本身不存在于环境中，tree 完全依赖自身内容来指导 agent，此时 stub = 功能缺失。
+**问题**: 生成 skill-tree 时，叶节点只生成 stub（标题+分类摘要+指向外部文件的链接），而非内联完整数据或指令。单个 stub 导致该能力不可用；多个叶节点同时被 stub 化则导致整条路径断裂、能力域完全不可用。尤其危险的场景是：技能本身不存在于环境中，tree 完全依赖自身内容来指导 agent，此时 stub = 功能缺失。
 
 **根源**: (1) 生成时没有检查源技能是否存在；(2) "自包含"要求未覆盖所有叶节点；(3) 验证阶段未检测存根模式；(4) 原始 skill 中的参考数据（特征字典、换算表、API 规格等）被拆出为独立叶节点时只做了摘要而非完整迁移。
 

@@ -10,11 +10,14 @@
 
 ---
 
-## 用法 A：Claude Code
+## 脚本用法
+
+**用法 A：Claude Code**
 
 1. 将 `skill-tree-generator/` 放到工程 `.claude/skills/` 下
 2. 打开 Claude Code
 3. 运行：
+   
    ```
    ./scripts/aggregate-skills.sh .claude/skills
    ```
@@ -23,15 +26,18 @@
    - skill-tree 写入 `.claude/skills/{name}-tree/`
    - 项目根 `CLAUDE.md` 追加路由协议（若不存在则创建）
 
-## 用法 B：Codex CLI
+**用法 B：Codex CLI**
 
 1. 将 `skill-tree-generator/` 放到工程 `.agent/skills/` 下（或自定义目录）
 2. **一次性** 安装 custom prompt，让 Codex CLI 认识 `/skill-tree-generator`：
+   
    ```
    ./scripts/install-codex-prompt.sh
    ```
+   
    该脚本会把 `SKILL.md` 拷到 `~/.codex/prompts/skill-tree-generator.md`
 3. 运行：
+   
    ```
    ./scripts/aggregate-skills.sh .agent/skills --agent codex
    ```
@@ -42,10 +48,11 @@
 
 > 如果你不想安装 custom prompt，也可以直接在 Codex 里让它读 `SKILL.md` 并执行聚合命令，脚本输出里会提示具体写法。
 
-## 用法 C：OpenCode
+**用法 C：OpenCode**
 
 1. 将 `skill-tree-generator/` 放到工程 `.opencode/skills/` 下（或自定义目录）
 2. 运行：
+   
    ```
    ./scripts/aggregate-skills.sh .opencode/skills --agent opencode
    ```
@@ -56,13 +63,27 @@
 
 ---
 
+## 直接使用Skill
+
+**1. Single Skill to Skill Tree**
+
+/skill-tree-generator <skill-name-or-skill-path-or-description>
+
+**2. Multiple Skill to Skill Tree**
+
+/skill-tree-generator --aggregate skill1,skill2,... [--domain domain-name]
+
+**3. Update Skill Tree**
+
+/skill-tree-generator --update <tree-path> --add <skill>
+
 ## 路径约定
 
-| Agent        | Skill 目录          | 记忆文件      |
-|--------------|--------------------|--------------|
-| Claude Code  | `.claude/skills/`  | `CLAUDE.md`  |
-| Codex CLI    | `.agent/skills/`   | `AGENTS.md`  |
-| OpenCode     | `.opencode/skills/`| `AGENTS.md`  |
+| Agent       | Skill 目录            | 记忆文件        |
+| ----------- | ------------------- | ----------- |
+| Claude Code | `.claude/skills/`   | `CLAUDE.md` |
+| Codex CLI   | `.agent/skills/`    | `AGENTS.md` |
+| OpenCode    | `.opencode/skills/` | `AGENTS.md` |
 
 ### 同一仓库想让两种 Agent 都用？
 
@@ -87,7 +108,6 @@ ln -s AGENTS.md CLAUDE.md
 1. 记忆文件（例如CLAUDE.md）放在根目录，查看是否包含上述“引用”中路由协议模版的内容。
 2. skills目录（例如.claude/skills）下生成Skill Tree以后，将其他skill清空，可以更好的测试Skill Tree的效果。
 3. 运行任务或者输入prompt，测试能否通过Skill Tree的路由功能“触发”相关的Skill。
-
 
 ## 路由追踪 [可选]
 
