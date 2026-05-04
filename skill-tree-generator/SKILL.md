@@ -105,52 +105,13 @@ For each non-leaf level, read `references/router_template.md` and generate `ROUT
 
 ### Mode 1 Step 5: Generate Leaf SKILL.md Files
 
-**前置检查**: 对每个叶节点，在生成前先确认源技能内容可获取。
-
-1. 如果源技能文件不存在 → **报错终止**，列出所有缺失的技能路径
-2. 如果源技能文件存在但内容为空 → **报错终止**
-3. 只有源内容完整可用时，才继续生成
+**前置检查**: 执行 `references/error_handling.md` 中的 **Error Severity & Handling Strategy** — 源技能不可用（Fatal）则报错终止，局部缺失（Degraded）则生成回退内容。
 
 For each leaf node, read `references/leaf_template.md` for the structure template. Extract the complete content from the original skill and fill it into the template. Do NOT replace any content with a file path reference or external link. Every instruction, code example, API reference, and constraint from the original skill must be inlined directly.
 
-### 容错机制
+**引用处理**: 执行 `references/error_handling.md` 中的 **Reference File Processing Flow** Step R1-R4（盘点 → 决策 → 清理 → 即时验证）。
 
-源技能文件不存在时的处理策略详见 **L10（存根问题）** 预防项 #4：要么报错终止，要么生成有意义的回退内容而非存根。
-
-**Self-Containment Rule [MANDATORY]**: Every leaf node must be fully self-contained, whether it contains executable instructions or reference data. Never create stub files that only contain a summary and a pointer to an external file. An agent loading only the tree must have everything needed to execute. This includes:
-- Feature dictionaries with Min/Max ranges and conversion factors
-- API endpoint specifications, including endpoints, parameters, and response formats
-- Enumerations, lookup tables, classification codes
-- Executable workflow steps, code examples, and usage patterns
-- Any data that the original skill contained or referenced
-
-If the original skill references an external file, read that file and inline its content into the appropriate leaf node. Do NOT leave a "see file X" reference.
-
-### 引用文件处理流程
-
-在生成每个叶节点时，必须执行以下引用处理流程：
-
-**Step 5a: 盘点外部引用**
-对源技能中每个被引用的文件/目录，使用 Glob 确认其是否存在：
-- 存在于源技能包中 → 继续 Step 5b
-- 不存在于源技能包中 → 标记为"不可用"
-
-**Step 5b: 决策处理方式**
-
-| 引用类型 | 处理方式 |
-|---------|---------|
-| 短文件（几屏以内） | 内联完整内容到叶节点的工作流/约束中 |
-| 大量文件或长内容（如文档库 90+ .md） | 拷贝整个目录到 tree 内（如 `{skill}/docs/`），叶节点中使用 tree 内部相对路径（`../docs/`） |
-| 不存在于源技能包中（如 `scripts/`、`references/*.json`） | 删除引用，替换为可直接执行的自包含指令（如用 Grep/Read 替代脚本调用） |
-
-**Step 5c: 生成后清理**
-所有叶节点生成完毕后：
-1. Grep 扫描所有叶节点中是否包含 "参考文档索引"/"Reference"/"References" 等段落
-2. 对每个引用条目三步处理：
-   - 文件已拷贝到 tree 内 → 路径替换为 tree 内部相对路径
-   - 内容已内联到叶节点 → 删除该引用条目（内容已在叶节点中）
-   - 文件在源技能包中不存在 → 删除整个"参考文档索引"段落
-3. Grep 扫描所有叶节点中是否存在指向 tree 外部的绝对路径（如 `.claude/skills/<source-skill>/`），全部替换为 tree 内部相对路径或删除
+**自包含**: 遵循 `references/error_handling.md` 中的 **Self-Containment Rule**，所有叶节点必须完全自包含。
 
 ### Mode 1 Step 6: Create Output Structure
 
@@ -203,11 +164,6 @@ Multi-skill trees require a two-phase routing: **Phase 1 selects the skill, Phas
 
 For each skill in the `--aggregate` list, independently analyze and extract capabilities.
 
-**前置检查（同 Mode 1 Step 5）**:
-1. 逐个确认每个源技能文件存在且内容非空
-2. 如果有技能不存在 → **报错终止**，列出缺失的技能列表
-3. 只有在全部存在时才继续
-
 Then build a comparison matrix:
 
 ```
@@ -247,15 +203,13 @@ Classify every capability group:
     └── SKILL.md                   # 跨 skill 工作流
 ```
 
-### Mode 2 Step C2: Generate Leaf SKILL.md Files [同 Mode 1 Step 5]
+### Mode 2 Step C2: Generate Leaf SKILL.md Files
 
-对每个叶节点，按照 Mode 1 Step 5 的完整规则生成（含前置检查、禁止存根、引用文件处理流程、生成后清理）：
+对每个叶节点，按照 `references/error_handling.md` 的完整规则生成：
 
-1. **前置检查**: 从 Step A 已确认源技能存在，直接提取完整内容
-2. **禁止存根**: 每个叶节点必须完全自包含，绝对禁止指向外部文件的引用
-3. **引用文件处理**: 执行 Mode 1 Step 5 中的 Step 5a（盘点）、Step 5b（决策：内联/拷贝/删除）、Step 5c（生成后清理）——此步骤在 Multi-Skill 场景下尤为重要，因为多个源技能的引用文件需要统一处理
-4. **容错**: 虽然 Step A 已前置检查，但如果某技能的子能力内容不可用时，使用 `[AUTO-GENERATED FALLBACK]` 回退
-5. **Self-Containment Rule**: 同 Mode 1 Step 5，所有叶节点必须自包含，tree 完全独立于源技能
+1. **前置检查**: Step A 已确认源技能存在 → 直接提取完整内容。如局部内容缺失 → 按 Degraded 级别生成 `[AUTO-GENERATED FALLBACK]` 回退
+2. **引用文件处理**: 执行 Step R1-R4。Multi-Skill 场景下多个源技能的引用文件需统一处理
+3. **自包含**: 遵循 Self-Containment Rule，所有叶节点完全独立于源技能
 
 ### Mode 2 Step D: Multi-Skill ROOT.md Generation
 
@@ -395,14 +349,11 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 
 ### Mode 3 Step C: Adding a new skill to existing Multi-Skill tree
 
-1. **Analyze new skill** — extract full capability set (先确认源技能存在，不存在则报错)
+1. **Analyze new skill** — extract full capability set。执行 `references/error_handling.md` 中的**Error Severity & Handling Strategy**：源技能不存在 → Fatal 报错终止
 2. **Build comparison matrix** against existing skills (same as Mode 2 Step A)
 3. **Identify new shared keywords** — any capability overlapping with existing skills
 4. **Update ROOT.md** — add new skill route + update 消歧规则 for ALL new shared keywords
-5. **Create new skill sub-tree** — `{new-skill}/ROUTER.md` + leaf SKILL.md files
-   - **禁止存根**: 新叶节点必须自包含，不得引用外部文件
-   - **引用文件处理**: 执行 Mode 1 Step 5 中的引用文件处理流程（Step 5a/5b/5c）——盘点新技能的外部引用，按短文件内联/多文件拷贝/不存在删除的策略处理
-   - **Self-Containment Rule**: 同 Mode 1 Step 5，所有新叶节点必须内联完整内容，tree 完全独立于源技能
+5. **Create new skill sub-tree** — `{new-skill}/ROUTER.md` + leaf SKILL.md files。执行 `references/error_handling.md` 中的**Reference File Processing Flow** Step R1-R4，遵循 **Self-Containment Rule**
 6. **Re-check shared leaves** — if new skill has identical capabilities, update shared leaf
 7. **Update cross-cutting/SKILL.md** — add cross-skill workflow definitions + update dependencies (L7: most commonly missed step)
 8. **Update SKILL-TREE.md** — add rows to mapping table + update coverage stats
@@ -426,6 +377,8 @@ Reference templates are available in `references/`:
 - `cross_cutting_template.md` - Cross-cutting workflows template (Multi-Skill)
 - `overview_template.md` - SKILL-TREE.md overview template
 - `validation_template.md` - Executable validation checklist (MUST run after generation)
+- `error_handling.md` - Error Handling, Reference File Processing, Self-Containment Rule (Unified Specification)
+- `lessons_learned.md` - Lessons Learned（L1-L15）
 
 ## Example
 
@@ -455,106 +408,22 @@ web-development-tree/
 
 ## Lessons Learned
 
-### L1: 路由表分类不互斥
-**问题**: L1 路由表中的分类有重叠，导致同一个 prompt 匹配多个路由目标。
-**预防**: 路由条件应尽量互斥，使用消歧规则处理边界情况。
+> **完整内容见** `references/lessons_learned.md`。以下为索引，具体的问题描述、根源分析和预防措施请阅读该文件。
 
-### L2: 叶节点内容太宽泛
-**问题**: 叶节点包含太多不相关的工作流，失去模块化的意义。
-**预防**: 每个叶节点只处理一类连贯的任务，保持单一职责。
-
-### L3: 路由可观测性不足
-**问题**: Agent 默认向用户汇报路由中间步骤（"我正在判断你属于哪个模块..."）吵闹，或完全不输出路由信息导致调试困难。
-**预防**: 默认静默执行路由。提供按需开关：用户 prompt 含 "路由调试"/"debug routing"/"路由追踪" 时输出紧凑路由路径 `[Route] ROOT → ... → [LEAF]`，其他时候不输出。
-
-### L4: 上下文忽略
-**问题**: 路由判断只看当前 prompt，忽略对话中已建立的技术栈上下文。
-**预防**: 每个路由节点必须显式要求考虑完整对话历史。
-
-### L5: 跨领域工作流遗漏
-**问题**: 用户任务跨越多个模块时，没有机制将多个叶节点组合执行。
-**预防**: ROOT.md 必须包含"如果任务跨越多个类别，并行读取多个叶节点"的指令。
-
-### L6: SKILL-TREE.md 映射表不准
-**问题**: 手动估算叶节点数，SKILL-TREE.md 统计表与实际不一致。
-**预防**: 生成映射表后逐条计数，禁止目测估算。
-
-### L7: Mode 3 添加新 skill 时遗漏 cross-cutting 更新
-**问题**: 添加新 skill 时只更新了子树和 ROOT.md，没有更新 cross-cutting/SKILL.md 的跨 skill 工作流定义。
-**预防**: Mode 3 步骤 7 现在显式要求更新 cross-cutting/SKILL.md。
-
-### L8: 关键词信号缺少分层和深度
-**问题**: ROOT.md 信号表只有高层描述词，缺少领域专有术语；多信号冲突时无优先级。
-**预防**: 信号分 T1（唯一确定词）、T2（领域偏好词）、T3（跨领域通用词）三层。路由时高 Tier 覆盖低 Tier。root_template.md 消歧规则包含信号优先级模板。
-
-### L9: 共享叶节点指令不完全相同
-**问题**: 将两个 skill 的相似能力合并为 Shared-identical 叶节点，但实际指令细节不同。
-**预防**: 只有指令完全一致才能合并为 Shared-identical。有任何差异则分为 Shared-similar 各自独立叶节点。
-
-### L10: 存根问题
-
-**问题**: 生成 skill-tree 时，叶节点只生成 stub（标题+分类摘要+指向外部文件的链接），而非内联完整数据或指令。单个 stub 导致该能力不可用；多个叶节点同时被 stub 化则导致整条路径断裂、能力域完全不可用。尤其危险的场景是：技能本身不存在于环境中，tree 完全依赖自身内容来指导 agent，此时 stub = 功能缺失。
-
-**根源**: (1) 生成时没有检查源技能是否存在；(2) "自包含"要求未覆盖所有叶节点；(3) 验证阶段未检测存根模式；(4) 原始 skill 中的参考数据（特征字典、换算表、API 规格等）被拆出为独立叶节点时只做了摘要而非完整迁移。
-
-**预防**:
-1. **前置检查**：生成前确认每个源技能都存在，不存在则报错而不是创造存根
-2. **禁止存根**：所有叶节点必须自包含，绝对禁止指向外部文件的引用。原始 skill 中引用的外部文件必须在生成时读取并嵌入到叶节点中
-3. **验证检测**：验证阶段必须扫描所有叶节点，检测存根模式（"Read the skill at"、"Full Instructions": Read 等）
-4. **容错机制**：源技能缺失时，要么报错终止，要么生成有意义的回退内容而非存根
-
-### L11: 叶节点指令弱化（边界处理丢失）
-
-**问题**: 拆分原始 skill 时，叶节点中保留了算法骨架，但弱化了原始 skill 中的关键执行细节（如 boundary clamp 的具体实现、5% tolerance 的 clamp 行为变成了"可选建议"）。原始 skill 说 "acceptable to use a 5% tolerance and clamp values"，拆分后变成 "do NOT clamp unless very slightly outside" —— 语义反转导致边界值未被修复。
-**预防**: 叶节点必须保留原始 skill 中的所有**执行级指令**（具体代码、阈值、clamp 行为），不能只保留"高层指导"。特别是数值处理逻辑，弱化措辞会导致行为改变。生成时应比对原始 skill 中的每个具体指令是否完整迁移。
-
-### L12: Mode 3 添加不同 skill 时未转型 Single-Skill Tree
-
-**问题**: 初始用 Mode 1 将单个 skill 转为 skill-tree（Single-Skill 结构，ROOT.md 使用 "Step 1: L1 路由"），之后通过 Mode 3 `--update --add` 添加一个**不同的新 skill** 时，Step A 仅检测到 Single-Skill Tree 就直接进入 Step B（添加能力到已有 skill），导致新 skill 被错误地当作已有 skill 的能力增量处理，而非作为独立 skill 子树加入。
-
-**根源**: Mode 3 Step A 的分支逻辑缺失了 "Single-Skill + 不同 skill" 这种情况。Step B 的设计前提是添加能力到**同一个 skill**，不适用于添加全新 skill。
-
-**预防**:
-1. **Step A2 显式判断**: Single-Skill Tree 下必须进一步判断 `--add` 是同一 skill 还是不同 skill
-2. **Step B2 转型**: 不同 skill 时，必须先将 Single-Skill tree 转型为 Multi-Skill tree（Mode 2 结构），再添加新 skill
-3. **转型保留完整性**: 转型过程保持所有现有叶节点内容和路由逻辑不变，仅调整目录结构和 ROOT.md 格式
-
-### L13: Step B2 转型后未删除原 Single-Skill 顶级模块目录
-
-**问题**: Single-Skill tree 转型为 Multi-Skill tree 时，将原顶级模块目录（`charts/`、`interactivity/` 等）移入 `{existing-skill}/` 子目录后，未显式删除树根目录下的原模块目录。结果树中存在两套并行的模块文件——一套在 `{existing-skill}/` 下（Multi-Skill 路由目标），一套在树根目录下（孤儿文件，不被任何路由引用）。不仅造成混乱，还可能导致 agent 误读孤儿文件而绕过正确的 Phase 1 路由。
-
-**根源**: Step B2 的 "move" 步骤在实践中可能被执行为 "copy"（尤其当目标子目录已存在时），缺少显式的删除原目录步骤。
-
-**预防**:
-1. **Step B2 步骤 8 显式删除**: 转换完成后，必须删除树根目录下的原模块目录（`{module1}/`、`{module2}/` 等）
-2. **验证检测**: Check 3 (Reachability) 会标记所有孤儿文件，转型后必须无孤儿文件
-3. **删除前确认**: 在删除前确认 `{existing-skill}/` 子目录下的对应文件已完整迁移
-
-### L14: 引用文件未内联/拷贝导致叶节点依赖外部源技能
-
-**问题**: 源技能中引用了外部文件（如 `docs/`、`references/`、`scripts/`），生成器在叶节点中保留了指向源技能目录的外部路径（如 `.claude/skills/xxx/docs/...`），而不是将内容内联或拷贝到 tree 内。导致：
-- 删除源技能后 tree 中的检索/参考路径全部失效
-- tree 不是真正自包含的，违反了 Self-Containment Rule
-
-**根源**: 生成器对所有引用一视同仁——没有区分"可内联的短内容"和"应拷贝的大文件集"。对于 `docs/` 这类大量文件，简单地保留了外部路径引用。
-
-**预防**:
-1. **生成前盘点**: 在生成叶节点之前，先 Glob 列出源技能中所有被引用的外部文件/目录
-2. **短文件内联**: 单文件内容较短（几屏以内）→ 直接内联到叶节点的工作流/约束中
-3. **多文件或长内容拷贝**: 文件数量多或单文件内容长（如文档库有 90+ 个 .md 文件）→ 将整个目录拷贝到 tree 内的对应位置（如 `{skill}/docs/`），叶节点中使用 tree 内部相对路径（`../docs/`）
-4. **不存在的文件删除引用**: 源技能包中不存在的文件（如复制包中缺失的 `scripts/`、`references/*.json`）→ 删除引用，替换为可直接执行的自包含指令（如用 Grep/Read 替代脚本调用）
-5. **验证检测**: Check 11 (No Stub Files) 应额外检查是否存在指向 tree 外部的路径引用
-
-### L15: 叶节点中"参考文档索引"段落未做路径替换或删除
-
-**问题**: 叶节点生成后，从源技能复制过来的"参考文档索引"/"Reference Documents"段落仍保留了指向源技能 `references/` 目录的原始路径。这些文件在复制包中往往不存在，删除源技能后这些路径完全失效。更严重的是，这些段落给 agent 造成"还有更多详细信息在外部"的错觉，实际内容已经在叶节点中内联完毕。
-
-**根源**: 生成器在拆分源技能内容到叶节点时，将"参考文档索引"段落原样复制，没有执行路径替换（指向 tree 内部副本）或删除（引用文件不存在）的决策。
-
-**预防**:
-1. **生成后扫描**: 所有叶节点生成完毕后，Grep 扫描 `参考文档索引`/`Reference`/`References` 等段落
-2. **三步处理每个引用**:
-   - 文件已拷贝到 tree 内 → 将路径替换为 tree 内部相对路径
-   - 文件内容已内联到叶节点 → 删除该引用条目（内容已在叶节点中）
-   - 文件在复制包中不存在 → 删除整个"参考文档索引"段落
-3. **纳入验证**: 此检查应作为 Check 11 (No Stub Files) 的一部分——外部文件路径引用等同于存根
+| ID | 主题 | 一句话 |
+|----|------|--------|
+| L1 | 路由表分类不互斥 | 使用消歧规则处理边界重叠 |
+| L2 | 叶节点内容太宽泛 | 每个叶节点保持单一职责 |
+| L3 | 路由可观测性不足 | 默认静默，按需输出 `[Route]` 路径 |
+| L4 | 上下文忽略 | 路由判断必须考虑完整对话历史 |
+| L5 | 跨领域工作流遗漏 | ROOT.md 必须含并行读取多叶节点的指令 |
+| L6 | 映射表不准 | 逐条计数，禁止目测估算 |
+| L7 | Mode 3 遗漏 cross-cutting | 添加新 skill 时显式更新 cross-cutting/SKILL.md |
+| L8 | 关键词信号无分层 | 信号分 T1/T2/T3 三层，高 Tier 覆盖低 Tier |
+| L9 | 共享叶节点指令不同 | 只有完全一致才能合并为 Shared-identical |
+| L10 | 存根问题 | 已制度化 → `references/error_handling.md` |
+| L11 | 叶节点指令弱化 | 保留所有执行级指令（代码、阈值、clamp 行为） |
+| L12 | Mode 3 未转型 Single-Skill | Step A2 显式判断 same/different skill |
+| L13 | 转型后未删除顶级模块 | Step B2 步骤 8 显式删除原模块目录 |
+| L14 | 引用文件未内联/拷贝 | 已制度化 → `references/error_handling.md` |
+| L15 | 参考文档索引未清理 | 已制度化 → `references/error_handling.md` |
