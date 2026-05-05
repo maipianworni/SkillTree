@@ -111,11 +111,11 @@ For each leaf node, read `references/leaf_template.md` for the structure templat
 
 **引用处理**: 执行 `references/error_handling.md` 中的 **Reference File Processing Flow** Step R1-R4（盘点 → 决策 → 清理 → 即时验证）。
 
-**自包含**: 遵循 `references/error_handling.md` 中的 **Self-Containment Rule**，所有叶节点必须完全自包含。
+**自包含**: 遵循 `references/error_handling.md` 中的 **Self-Containment Rule**，生成结果必须作为 skill tree 整体自包含；短引用内联到叶节点，大文件集可拷贝到 tree 内并通过 tree 内部相对路径引用。
 
 ### Mode 1 Step 6: Create Output Structure
 
-Create all files in the target directory:
+Create all files in the target directory. **Small files (≤10KB) use Write tool; large file sets (>5 files or >50KB) use staging + platform-native copy (`cp -a` on Unix/macOS, `robocopy` on Windows; `xcopy /E /I` only as last fallback) — never copy large directories file-by-file with Write. Treat `robocopy` return codes `< 8` as success.**
 
 ```
 .claude/skills/{skill-name}-tree/     # Claude Code
@@ -208,8 +208,8 @@ Classify every capability group:
 对每个叶节点，按照 `references/error_handling.md` 的完整规则生成：
 
 1. **前置检查**: Step A 已确认源技能存在 → 直接提取完整内容。如局部内容缺失 → 按 Degraded 级别生成 `[AUTO-GENERATED FALLBACK]` 回退
-2. **引用文件处理**: 执行 Step R1-R4。Multi-Skill 场景下多个源技能的引用文件需统一处理
-3. **自包含**: 遵循 Self-Containment Rule，所有叶节点完全独立于源技能
+2. **引用文件处理**: 执行 Step R1-R4。Multi-Skill 场景下多个源技能的引用文件需统一处理。大文件集（>5 files / >50KB）使用 staging + 平台原生命令拷贝，禁止 Write 逐文件写入
+3. **自包含**: 遵循 Self-Containment Rule，生成后的 skill tree 完全独立于源技能；短引用内联，大文件集可使用 tree 内部相对路径引用
 
 ### Mode 2 Step D: Multi-Skill ROOT.md Generation
 
@@ -353,7 +353,7 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 2. **Build comparison matrix** against existing skills (same as Mode 2 Step A)
 3. **Identify new shared keywords** — any capability overlapping with existing skills
 4. **Update ROOT.md** — add new skill route + update 消歧规则 for ALL new shared keywords
-5. **Create new skill sub-tree** — `{new-skill}/ROUTER.md` + leaf SKILL.md files。执行 `references/error_handling.md` 中的**Reference File Processing Flow** Step R1-R4，遵循 **Self-Containment Rule**
+5. **Create new skill sub-tree** — `{new-skill}/ROUTER.md` + leaf SKILL.md files。执行 `references/error_handling.md` 中的**Reference File Processing Flow** Step R1-R4，遵循 **Self-Containment Rule**。大文件集使用 staging + 平台原生命令拷贝，禁止 Write 逐文件写入
 6. **Re-check shared leaves** — if new skill has identical capabilities, update shared leaf
 7. **Update cross-cutting/SKILL.md** — add cross-skill workflow definitions + update dependencies (L7: most commonly missed step)
 8. **Update SKILL-TREE.md** — add rows to mapping table + update coverage stats
