@@ -14,6 +14,7 @@
 
 | Agent       | 记忆文件     | Skill 目录                              |
 |-------------|-------------|-----------------------------------------|
+| Bitfun      | `AGENTS.md` | `.bitfun/skills/`                       |
 | Claude Code | `CLAUDE.md` | `.claude/skills/`                       |
 | Codex CLI   | `AGENTS.md` | `.agent/skills/`（或用户自定义目录）      |
 | OpenCode    | `AGENTS.md` | `.opencode/skills/`                     |
