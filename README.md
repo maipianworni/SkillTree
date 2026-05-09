@@ -1,4 +1,5 @@
 # Skill Tree Generator
+> ⚠️ **Research Preview** — 此项目处于早期研究阶段，欢迎试用和反馈。
 
 一个把庞杂 skill 聚合为分层路由树的工具，让 AI agent 按需加载子能力，避免一次性把所有指令塞进上下文。
 
