@@ -1,9 +1,13 @@
 # Skill Tree Generator
-> ⚠️ **Research Preview** — 此项目处于早期研究阶段，欢迎试用和反馈。
+
+> ⚠️ **Research Preview** 
 
 一个把庞杂 skill 聚合为分层路由树的工具，让 AI agent 按需加载子能力，避免一次性把所有指令塞进上下文。
 
+![Skill Tree demo](images/skilltree.gif)
+
 ## 支持的 Agent
+
 - **Bitfun**（skill 目录 `.bitfun/skills/`，记忆文件 `AGENTS.md`）
 - **Claude Code**（原生支持，skill 目录 `.claude/skills/`，记忆文件 `CLAUDE.md`）
 - **Codex CLI**（通过 `AGENTS.md` 注入路由协议，skill 目录可自定义，推荐 `.agent/skills/`）
@@ -14,36 +18,47 @@
 ## 脚本用法
 
 **用法 A：Bitfun**
+
 1. 将 `skill-tree-generator/` 放到工程 `.bitfun/skills/` 下
+
 2. 打开 Bitfun
+
 3. 运行：
    
    ```
    ./scripts/aggregate-skills.sh .bitfun/skills --agent bitfun
    ```
+
 4. 把输出的命令贴回 Claude Code（形如 `/skill-tree-generator --aggregate ...`）
+
 5. 生成结果：
+   
    - skill-tree 写入 `.bitfun/skills/{name}-tree/`
    - 项目根 `AGENTS.md` 追加路由协议（若不存在则创建）
-
 
 **用法 B：Claude Code**
 
 1. 将 `skill-tree-generator/` 放到工程 `.claude/skills/` 下
+
 2. 打开 Claude Code
+
 3. 运行：
    
    ```
    ./scripts/aggregate-skills.sh .claude/skills
    ```
+
 4. 把输出的命令贴回 Claude Code（形如 `/skill-tree-generator --aggregate ...`）
+
 5. 生成结果：
+   
    - skill-tree 写入 `.claude/skills/{name}-tree/`
    - 项目根 `CLAUDE.md` 追加路由协议（若不存在则创建）
 
 **用法 C：Codex CLI**
 
 1. 将 `skill-tree-generator/` 放到工程 `.agent/skills/` 下（或自定义目录）
+
 2. **一次性** 安装 custom prompt，让 Codex CLI 认识 `/skill-tree-generator`：
    
    ```
@@ -51,13 +66,17 @@
    ```
    
    该脚本会把 `SKILL.md` 拷到 `~/.codex/prompts/skill-tree-generator.md`
+
 3. 运行：
    
    ```
    ./scripts/aggregate-skills.sh .agent/skills --agent codex
    ```
+
 4. 把输出的命令贴回 Codex CLI
+
 5. 生成结果：
+   
    - skill-tree 写入 `.agent/skills/{name}-tree/`
    - 项目根 `AGENTS.md` 追加路由协议（若不存在则创建）
 
@@ -66,13 +85,17 @@
 **用法 D：OpenCode**
 
 1. 将 `skill-tree-generator/` 放到工程 `.opencode/skills/` 下（或自定义目录）
+
 2. 运行：
    
    ```
    ./scripts/aggregate-skills.sh .opencode/skills --agent opencode
    ```
+
 3. 按提示将输出的指令贴回 OpenCode（形如 `Read .../SKILL.md and execute: /skill-tree-generator --aggregate ...`）
+
 4. 生成结果：
+   
    - skill-tree 写入 `.opencode/skills/{name}-tree/`
    - 项目根 `AGENTS.md` 追加路由协议（若不存在则创建）
 
