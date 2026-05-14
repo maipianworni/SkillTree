@@ -105,7 +105,7 @@
 
 **1. Single Skill to Skill Tree**
 
-/skill-tree-generator <skill-name-or-skill-path-or-description>
+/skill-tree-generator skill
 
 **2. Multiple Skill to Skill Tree**
 
@@ -113,7 +113,7 @@
 
 **3. Update Skill Tree**
 
-/skill-tree-generator --update <tree-path> --add <skill>
+/skill-tree-generator --update tree-path --add skill
 
 ## 路径约定
 
