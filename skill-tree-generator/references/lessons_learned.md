@@ -88,3 +88,14 @@
 **根源**: 生成器在拆分源技能内容到叶节点时，将"参考文档索引"段落原样复制，没有执行路径替换（指向 tree 内部副本）或删除（引用文件不存在）的决策。
 
 > **已制度化**: 本问题的预防措施已纳入 `references/error_handling.md` 的 Step R3 (Post-Generation Cleanup)。R3.1 定义了完整的 Grep 模式库（中英文参考段落+外部指针短语+tree 外部路径），R3.2 定义了路径替换/删除/清理的三步处理逻辑。
+
+## L16: Mode 2 skill-first 结构导致同领域下 skill 各自生成重复子节点
+
+**问题**: Mode 2 聚合多个 skill 时，采用 skill-first 树结构（`{skill}/ROUTER.md → {capability}/SKILL.md`），以 skill 为第一级组织维度。当聚合同领域 skills（如 `--aggregate react,vue,svelte --domain frontend`）时，每个 skill 各自生成一套完整的子节点（state-management、component-creation、routing 等），导致：(1) 大量重复的同名子节点分散在不同 skill 目录下；(2) 用户按能力域查询时需要在多个 skill 子树间跳转；(3) `--domain` flag 只影响 ROOT.md 描述文本，未改变树结构。
+
+**根源**: Mode 2 最初设计假设 skills 来自不同领域（如 web-dev + technical-writing + security-review），skill 作为第一级维度是合理的。但当 skills 来自同一领域时，能力域才应该是第一级维度。
+
+**预防**:
+1. **Domain-first 结构**: Mode 2 统一采用 `{domain}/ROUTER.md → {skill}/SKILL.md` 结构，能力域为第一级，skill 为第二级
+2. **Skill 快速索引**: ROOT.md 包含 skill→能力域映射表，处理用户仅提 skill 名称（P1）无能力域（P2）的情况
+3. **单 skill 域优化**: 仅一个 skill 具备的能力域无需 ROUTER.md，ROOT.md 直接路由到叶节点

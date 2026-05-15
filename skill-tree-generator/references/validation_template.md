@@ -220,12 +220,14 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 ## Multi-Skill 额外检查 (仅 Multi-Skill 树)
 
 ### Check M1: Shared Keyword Coverage
-- 列出 2+ 个 skill 共有的所有能力
-- 确认 ROOT.md 的消歧规则覆盖每个共享词
+- 列出所有能力域，标记哪些域包含 2+ 个 skill（Shared-similar）和哪些仅 1 个 skill（Unique）
+- 确认 ROOT.md 的消歧规则覆盖每个多 skill 能力域的共享关键词
+- 确认仅 1 个 skill 的域在 ROOT.md 中为直接路由（无需 ROUTER.md）
 
 ### Check M2: Cross-Skill Path Non-interference
-- 追踪 3+ 条来自不同 skill 的路由
-- 确认没有错误路由到其他 skill 子树
+- 追踪 3+ 条跨越不同 skill 的路由路径
+- 确认从 ROOT → 能力域 ROUTER → skill 叶节点的路由正确，未错误路由到其他能力域或错误 skill
+- 验证 P1+P2 组合信号（如"用 X 做 Y"）能正确路由到 `{domain}/{skill}/SKILL.md`
 
 ### Check M3: Shared Leaf Accuracy
 - 对于 Shared-identical 叶节点：确认指令完全相同

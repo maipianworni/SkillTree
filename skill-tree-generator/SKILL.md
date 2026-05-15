@@ -145,9 +145,9 @@ After generating all files, you **MUST** execute every check in `references/vali
 Generate a routing tree that covers multiple skills. Skills can be from the same domain or from different domains.
 
 **Input**: `--aggregate skill1,skill2,skill3 [--domain domain-name]`
-**Output**: Unified tree with shared ROOT.md, each skill as a sub-tree
+**Output**: Unified tree organized by capability domains, with skills as leaves under each domain
 
-`--domain` is optional. When omitted, the tree covers cross-domain skills and ROOT.md routes by domain intent. When provided, the tree covers same-domain skills and ROOT.md routes by capability differences within that domain.
+`--domain` is optional. When provided, it names the tree and gives ROOT.md additional domain context for routing descriptions. When omitted, the tree name is derived from the skill names.
 
 Examples:
 ```
@@ -158,7 +158,7 @@ Examples:
 /skill-tree-generator --aggregate react,vue,svelte --domain frontend
 ```
 
-Multi-skill trees require a two-phase routing: **Phase 1 selects the skill, Phase 2 selects the capability within that skill.**
+Multi-skill trees use **domain-first** organization with two-phase routing: **Phase 1 selects the capability domain, Phase 2 selects the skill within that domain.** This avoids each skill independently generating duplicate child nodes for the same functional areas.
 
 ### Mode 2 Step A: Cross-Skill Capability Collection
 
@@ -185,23 +185,39 @@ Classify every capability group:
 | **Shared-similar** | 多个 skill 有相似功能 | 各自独立叶节点，ROOT.md 消歧 |
 | **Shared-identical** | 功能/指令完全相同 | 合并为共享叶节点，标注适用 skill |
 
-### Mode 2 Step C: Two-Phase Hierarchy Design
+### Mode 2 Step C: Domain-First Hierarchy Design
+
+Organize the tree by capability domain first, with skills as leaves within each domain. This is the reverse of the old skill-first approach — domains are the primary organization dimension, so skills that share the same functional area are grouped together rather than each skill independently generating duplicate child nodes.
 
 ```
 {domain}-tree/
-├── ROOT.md                        # Phase 1: 选 skill
+├── ROOT.md                        # Phase 1: 选能力域
 ├── SKILL-TREE.md                  # Overview with mapping table
-├── {skill_a}/                     # Skill A 的完整子树
-│   ├── ROUTER.md                  # Phase 2: 选能力
-│   └── {capability}/SKILL.md
-├── {skill_b}/                     # Skill B 的完整子树
+├── {domain_a}/                    # 能力域 A
+│   ├── ROUTER.md                  # Phase 2: 选 skill
+│   ├── {skill_x}/SKILL.md         # 叶节点: skill_x 在 domain_a 的能力
+│   ├── {skill_y}/SKILL.md         # 叶节点: skill_y 在 domain_a 的能力
+│   └── {skill_z}/SKILL.md
+├── {domain_b}/                    # 能力域 B
 │   ├── ROUTER.md
-│   └── {capability}/SKILL.md
+│   ├── {skill_x}/SKILL.md
+│   └── {skill_y}/SKILL.md
+├── {domain_c}/                    # Unique 能力域（仅一个 skill 有）
+│   └── {skill_x}/SKILL.md         # 无需 ROUTER.md，直接路由到叶节点
 ├── shared/                        # Shared-identical 能力
-│   └── {capability}/SKILL.md      # 标注: 适用于 skill_a, skill_b
+│   └── {capability}/SKILL.md      # 标注: 适用于 skill_x, skill_y
 └── cross-cutting/
     └── SKILL.md                   # 跨 skill 工作流
 ```
+
+**Design Guidelines:**
+- **L1 domains**: Capability groups from the comparison matrix (Step A) — these are functional areas like "state-management", "routing", "styling"
+- **L2 skills**: Which skills have this capability — each is a leaf SKILL.md under the domain
+- **Domain with single skill (Unique)**: No ROUTER.md needed; ROOT.md routes directly to the leaf SKILL.md
+- **Domain with multiple skills (Shared-similar)**: ROUTER.md disambiguates which skill's leaf to read
+- **Depth limit**: 2-3 levels for domain-first trees (ROOT → domain → skill leaf, or ROOT → domain → ROUTER → skill leaf)
+
+**Domain extraction**: The capability groups from the comparison matrix (Step A) become the L1 domains. Each group that has ≥2 skills gets a ROUTER.md for skill disambiguation. Groups with only 1 skill get a direct leaf node (no ROUTER needed).
 
 ### Mode 2 Step C2: Generate Leaf SKILL.md Files
 
@@ -213,7 +229,13 @@ Classify every capability group:
 
 ### Mode 2 Step D: Multi-Skill ROOT.md Generation
 
-ROOT.md must implement two-phase routing. Read `references/root_template.md` Multi-Skill section and generate ROOT.md following that template.
+ROOT.md must implement domain-first two-phase routing. Read `references/root_template.md` Multi-Skill section and generate ROOT.md following that template.
+
+**Key additions vs old skill-first ROOT.md:**
+- Phase 1 routes to capability domains (not skills)
+- Phase 2 delegates to domain ROUTER.md for skill selection
+- Include a **Skill 快速索引** table mapping each skill to its capability domains — used when user mentions a skill name (P1) without a specific domain
+- 消歧规则 handle the case where a skill name is mentioned without a capability context
 
 ### Mode 2 Step E: Multi-Skill SKILL-TREE.md Overview
 
@@ -255,9 +277,10 @@ Read `<tree-path>/ROOT.md` and check:
 
 | 特征 | Single-Skill Tree | Multi-Skill Tree |
 |------|-------------------|------------------|
-| 路由表标题 | "Step 1: L1 路由" | "Phase 1: 选 Skill" |
-| 路由目标 | `./{module}/ROUTER.md` | `./{skill-name}/ROUTER.md` |
+| 路由表标题 | "Step 1: L1 路由" | "Phase 1: 选能力域" |
+| 路由目标 | `./{module}/ROUTER.md` | `./{domain}/ROUTER.md` |
 | 消歧规则 | 无 | 有消歧规则 section |
+| Skill 快速索引 | 无 | 有 Skill 快速索引 table |
 
 ### Mode 3 Step A2: For Single-Skill Tree — Same Skill or New Skill?
 
@@ -280,7 +303,7 @@ Read `<tree-path>/ROOT.md` and check:
 
 ### Mode 3 Step B2: Transform Single-Skill Tree to Multi-Skill Tree
 
-When adding a different skill to a Single-Skill tree, the tree must be restructured from Mode 1 format to Mode 2 format before adding the new skill.
+When adding a different skill to a Single-Skill tree, the tree must be restructured from Mode 1 format to Mode 2 domain-first format before adding the new skill.
 
 **Current structure (Single-Skill):**
 ```
@@ -294,20 +317,19 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
     └── ...
 ```
 
-**Target structure (Multi-Skill):**
+**Target structure (domain-first Multi-Skill):**
 ```
 {tree}/
-├── ROOT.md              # Phase 1: 选 Skill, Phase 2: 选能力
+├── ROOT.md              # Phase 1: 选能力域, Phase 2: 选 skill
 ├── SKILL-TREE.md
-├── {existing-skill}/    # 原 Single-Skill 的模块移入此处
-│   ├── ROUTER.md        # 新建：原 L1 路由表移入此处
-│   ├── {module1}/
-│   │   ├── ROUTER.md    # 保持不变
-│   │   └── {leaf}/SKILL.md
-│   └── {module2}/...
-├── {new-skill}/         # 新 skill 的子树（按 Step C 生成）
+├── {module1}/           # 原模块 → 能力域 (保留)
+│   ├── ROUTER.md        # Phase 2: 选 skill（更新路由表）
+│   ├── {existing-skill}/SKILL.md   # 原 leaf 内容移入
+│   └── {new-skill}/SKILL.md        # 新 skill 在此域的能力
+├── {module2}/
 │   ├── ROUTER.md
-│   └── ...
+│   ├── {existing-skill}/SKILL.md
+│   └── {new-skill}/SKILL.md
 ├── shared/              # 共享能力目录
 ├── cross-cutting/       # 跨 skill 工作流
 │   └── SKILL.md
@@ -316,25 +338,27 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 **Transformation steps:**
 
 1. **Identify existing skill name** from SKILL-TREE.md and the tree directory name
-2. **Create `{existing-skill}/` subdirectory** and move all existing module directories into it
-3. **Create `{existing-skill}/ROUTER.md`** — convert the old ROOT.md's L1 routing table into a skill-level ROUTER.md:
-   - The old ROOT.md's `| {category} | Read ./{module}/ROUTER.md |` table becomes the new ROUTER.md's routing table
-   - Add `[L2]` level marker
-   - Preserve all routing conditions and context hints
-4. **Rewrite ROOT.md** to Multi-Skill format (follow Mode 2 Step D template):
-   - Phase 1: 选 Skill — includes both existing skill and new skill
-   - Phase 2: 选能力 — delegates to skill sub-tree ROUTER.md
+2. **For each existing module directory**, restructure its contents:
+   - Create `{module}/{existing-skill}/` subdirectory
+   - Move the existing leaf SKILL.md into `{module}/{existing-skill}/SKILL.md`
+   - If the module had subdirectories with ROUTER.md + leaves, flatten or nest under `{existing-skill}/` as appropriate
+3. **Update each module's ROUTER.md** — add the existing skill as a routing target:
+   - Old: `| {condition} | Read ./{leaf}/SKILL.md |`
+   - New: `| {condition} | Read ./{existing-skill}/SKILL.md |` (plus rows for new skill once Step C runs)
+4. **Rewrite ROOT.md** to domain-first Multi-Skill format (follow Mode 2 Step D template):
+   - Phase 1: 选能力域 — routes to each module's ROUTER.md (the modules ARE the domains)
+   - Phase 2: 选 skill — delegates to domain ROUTER.md
+   - Add Skill 快速索引 table (existing skill + new skill)
    - Add 消歧规则 section
    - Add 信号优先级 table (L8)
 5. **Create `shared/` directory** — initially empty, populated if Step C finds shared capabilities
 6. **Create `cross-cutting/SKILL.md`** — follow Mode 2 Step F template, include workflows combining existing + new skill
-7. **Update `SKILL-TREE.md`** — rewrite to Multi-Skill format with skill→capability mapping table and coverage stats
-8. **Delete original top-level module directories** — after moving modules into `{existing-skill}/`, the original `{module1}/`, `{module2}/`, etc. directories at the tree root must be physically deleted. These are now orphan duplicates that must not remain alongside the new Multi-Skill structure.
-9. **Then proceed to add the new skill** — execute Step C (add new skill to Multi-Skill tree) for the `--add` skill
+7. **Update `SKILL-TREE.md`** — rewrite to domain-first Multi-Skill format with domain→skill→leaf mapping table and coverage stats
+8. **Then proceed to add the new skill** — execute Step C (add new skill to Multi-Skill tree) for the `--add` skill. For each domain the new skill covers, create `{module}/{new-skill}/SKILL.md` and update the domain ROUTER.md.
 
 **Important constraints during transformation:**
-- **Preserve all existing leaf content** — no SKILL.md files are modified, only moved
-- **Preserve all routing logic** — the old ROOT.md's routing conditions must be accurately transferred to `{existing-skill}/ROUTER.md`
+- **Preserve all existing leaf content** — no SKILL.md files are modified, only moved into `{existing-skill}/` subdirectories
+- **Modules become domains** — the existing Single-Skill L1 modules map naturally to capability domains in the Multi-Skill tree
 - **Do NOT create stubs** — shared/ may be empty initially; only populate if shared capabilities are detected
 - After transformation + adding new skill, run full Mode 2 validation
 
@@ -350,13 +374,21 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 ### Mode 3 Step C: Adding a new skill to existing Multi-Skill tree
 
 1. **Analyze new skill** — extract full capability set。执行 `references/error_handling.md` 中的**Error Severity & Handling Strategy**：源技能不存在 → Fatal 报错终止
-2. **Build comparison matrix** against existing skills (same as Mode 2 Step A)
-3. **Identify new shared keywords** — any capability overlapping with existing skills
-4. **Update ROOT.md** — add new skill route + update 消歧规则 for ALL new shared keywords
-5. **Create new skill sub-tree** — `{new-skill}/ROUTER.md` + leaf SKILL.md files。执行 `references/error_handling.md` 中的**Reference File Processing Flow** Step R1-R4，遵循 **Self-Containment Rule**。大文件集使用 staging + 平台原生命令拷贝，禁止 Write 逐文件写入
-6. **Re-check shared leaves** — if new skill has identical capabilities, update shared leaf
-7. **Update cross-cutting/SKILL.md** — add cross-skill workflow definitions + update dependencies (L7: most commonly missed step)
-8. **Update SKILL-TREE.md** — add rows to mapping table + update coverage stats
+2. **Build comparison matrix** against existing skills (same as Mode 2 Step A). Map the new skill's capabilities to existing domains.
+3. **Identify new domains** — capabilities the new skill has that don't fit any existing domain → create new domain directories
+4. **For each existing domain the new skill covers**:
+   - Create `{domain}/{new-skill}/SKILL.md` with the skill's capability content for that domain
+   - Update `{domain}/ROUTER.md` — add a row for the new skill
+   - If the domain previously had only 1 skill (no ROUTER.md), create ROUTER.md now with both skills
+5. **For each new domain** (capabilities unique to the new skill):
+   - Create `{new-domain}/{new-skill}/SKILL.md` (single-skill domain, no ROUTER needed yet)
+6. **Update ROOT.md**:
+   - Add new domains to Phase 1 routing table
+   - Update Skill 快速索引 table — add new skill with its domain list
+   - Update 消歧规则 for ALL new shared keywords
+7. **Re-check shared leaves** — if new skill has identical capabilities, update shared leaf
+8. **Update cross-cutting/SKILL.md** — add cross-skill workflow definitions + update dependencies (L7: most commonly missed step)
+9. **Update SKILL-TREE.md** — add rows to mapping table + update coverage stats
 
 ### Mode 3 Final Step: Validation
 After generating all files, you **MUST** execute every check in `references/validation_template.md`.
@@ -427,3 +459,4 @@ web-development-tree/
 | L13 | 转型后未删除顶级模块 | Step B2 步骤 8 显式删除原模块目录 |
 | L14 | 引用文件未内联/拷贝 | 已制度化 → `references/error_handling.md` |
 | L15 | 参考文档索引未清理 | 已制度化 → `references/error_handling.md` |
+| L16 | Mode 2 skill-first 重复子节点 | 同领域 skill 聚合改用 domain-first 结构 |

@@ -48,61 +48,70 @@
 
 ---
 
-## Multi-Skill 模式
+## Multi-Skill 模式（Domain-First）
 
 ````markdown
 # {Domain} Tree Overview
 
 ## 概述
-本 skill-tree 将 {N} 个能力组织为跨 skill 分层路由树，覆盖 {M} 个 skill。
+本 skill-tree 将 {N} 个能力组织为 domain-first 分层路由树，覆盖 {M} 个 skill。
 
 ## 路由原理
 ```
-用户意图 → ROOT.md (Phase 1: 选 Skill) → ROUTER.md (Phase 2: 选能力) → LEAF SKILL.md
+用户意图 → ROOT.md (Phase 1: 选能力域) → ROUTER.md (Phase 2: 选 skill) → LEAF SKILL.md
 ```
 
 ## 目录结构
 ```
 {domain}-tree/
-├── ROOT.md                          # Phase 1: 选 Skill
+├── ROOT.md                          # Phase 1: 选能力域
 ├── SKILL-TREE.md                    # 本文件
 │
-├── {skill_a}/                       # {Skill_A} 子树
-│   ├── ROUTER.md                    # Phase 2: 选能力
-│   └── {capability}/SKILL.md
+├── {domain_a}/                      # 能力域 A
+│   ├── ROUTER.md                    # Phase 2: 选 skill（≥2 skills 时需要）
+│   ├── {skill_x}/SKILL.md           # skill_x 在 domain_a 的能力
+│   ├── {skill_y}/SKILL.md           # skill_y 在 domain_a 的能力
+│   └── {skill_z}/SKILL.md
 │
-├── {skill_b}/                       # {Skill_B} 子树
+├── {domain_b}/                      # 能力域 B
 │   ├── ROUTER.md
-│   └── {capability}/SKILL.md
+│   ├── {skill_x}/SKILL.md
+│   └── {skill_y}/SKILL.md
+│
+├── {domain_c}/                      # Unique 能力域（仅 1 个 skill）
+│   └── {skill_x}/SKILL.md           # 无需 ROUTER.md
 │
 ├── shared/                          # 共享能力
-│   └── {capability}/SKILL.md        # 标注: 适用于 skill_a, skill_b
+│   └── {capability}/SKILL.md        # 标注: 适用于 skill_x, skill_y
 │
 └── cross-cutting/
     └── SKILL.md                     # 跨 skill 工作流
 ```
 
-## 能力 → 叶节点映射表
+## 能力域 → Skill → 叶节点映射表
 
-| Skill | 能力 | 叶节点路径 |
-|-------|------|-----------|
-| `skill-a` | {capability} | `skill-a/{module}/SKILL.md` |
-| `skill-b` | {capability} | `skill-b/{module}/SKILL.md` |
-| `skill-a, skill-b` | {shared capability} | `shared/{capability}/SKILL.md` |
+| 能力域 | Skill | 叶节点路径 |
+|--------|-------|-----------|
+| `{domain_a}` | `{skill_x}` | `{domain_a}/{skill_x}/SKILL.md` |
+| `{domain_a}` | `{skill_y}` | `{domain_a}/{skill_y}/SKILL.md` |
+| `{domain_b}` | `{skill_x}` | `{domain_b}/{skill_x}/SKILL.md` |
+| `{domain_c}` | `{skill_x}` | `{domain_c}/{skill_x}/SKILL.md` (Unique) |
+| `shared` | `{skill_x}, {skill_y}` | `shared/{capability}/SKILL.md` |
 
 ## Skill 覆盖统计
 
-| Skill | 能力数 | 叶节点数 |
-|-------|--------|---------|
-| `{skill_a}` | {N} | {M} |
-| `{skill_b}` | {N} | {M} |
-| shared | {N} | {M} |
-| cross-cutting | {N} workflows | 1 |
-| **总计** | **{total}** | **{total}** |
+| Skill | 涉及能力域数 | 叶节点数 |
+|-------|------------|---------|
+| `{skill_x}` | {N} | {M} |
+| `{skill_y}` | {N} | {M} |
+| shared | — | {N} |
+| cross-cutting | — | 1 |
+| **总计** | **{total_domains} domains** | **{total_leaves}** |
 
 ## 新增 Skill 指南
-1. 创建 `{new-skill}/ROUTER.md` + 叶节点
-2. 更新 ROOT.md Phase 1 路由表 + 消歧规则
-3. 更新 cross-cutting/SKILL.md（工作流 + dependencies）
-4. 更新本文件映射表和覆盖统计
+1. 分析新 skill 的能力 → 映射到现有能力域或创建新域
+2. 对每个涉及的域：创建 `{domain}/{new-skill}/SKILL.md`，更新 `{domain}/ROUTER.md`
+3. 更新 ROOT.md Phase 1 路由表 + Skill 快速索引 + 消歧规则
+4. 更新 cross-cutting/SKILL.md（工作流 + dependencies）
+5. 更新本文件映射表和覆盖统计
 ````
