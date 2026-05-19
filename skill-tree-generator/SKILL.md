@@ -350,7 +350,7 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
    - Phase 2: 选 skill — delegates to domain ROUTER.md
    - Add Skill 快速索引 table (existing skill + new skill)
    - Add 消歧规则 section
-   - Add 信号优先级 table (L8)
+   - Add 信号优先级 table
 5. **Create `shared/` directory** — initially empty, populated if Step C finds shared capabilities
 6. **Create `cross-cutting/SKILL.md`** — follow Mode 2 Step F template, include workflows combining existing + new skill
 7. **Update `SKILL-TREE.md`** — rewrite to domain-first Multi-Skill format with domain→skill→leaf mapping table and coverage stats

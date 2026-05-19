@@ -103,7 +103,7 @@ This template defines the root-level routing protocol for a skill-tree.
 - 仅提到 **"{共享关键词}"** 无能力域上下文 → 询问用户选择能力域
 - 对话中已建立 Skill 上下文 → 在各能力域的 ROUTER.md 中优先路由到该 skill
 
-### 信号优先级 [L8 预防]
+### 信号优先级
 
 当用户 prompt 中同时包含多个信号时，按以下优先级处理：
 

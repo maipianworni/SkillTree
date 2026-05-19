@@ -29,7 +29,7 @@ You MUST follow this routing protocol BEFORE responding to any user request, no 
 Failure to read ROOT.md first is a critical error. Do not proceed with any task, tool call, or response until routing is complete.
 
 ## Routing Protocol
-1. Glob `{SKILLS_DIR}/*-tree/ROOT.md` to discover all skill trees
+1. Glob `{SKILLS_DIR}/*-tree/ROOT.md` to discover all skill trees. If glob fails, list `{SKILLS_DIR}` and check each `*-tree` subdirectory for `ROOT.md`.
 2. Read every ROOT.md file found
 3. Follow the routing logic in ROOT.md to select the correct skill
 4. Only after routing is complete, proceed with the user's task
