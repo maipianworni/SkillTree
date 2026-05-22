@@ -21,21 +21,17 @@ description: Generates, aggregates, and extends modular skill-trees with hierarc
 
 ## Overview
 
-This skill transforms a monolithic skill or multiple skills into a modular, hierarchical skill-tree structure that enables dynamic routing based on user prompts. The generated skill-tree mimics a file system with:
+Transform monolithic skills into modular, hierarchical skill-trees (ROOT.md → ROUTER.md → SKILL.md) with dynamic routing. Use when:
+- A skill has grown too complex and needs modularization
+- Multiple distinct workflows exist within a single skill
+- Multiple related skills need to be unified under one routing tree
+- Cross-domain workflows span multiple skills
+- Overlapping capabilities across skills need deduplication
+- An existing skill-tree needs new skills or capabilities added
 
-- **ROOT.md** - Root-level routing protocol; 
-- **ROUTER.md** - Navigation logic at each non-leaf level
-- **SKILL.md** - Leaf nodes containing actual skill instructions
+## Strict Conformance
 
-## When to Use This Skill
-
-Use this skill when:
-- A skill has grown too complex and needs modularization into sub-skills with routing
-- Multiple distinct workflows exist within a single skill and context-aware routing is needed
-- Multiple related skills need to be unified under one routing tree with shared capabilities
-- Cross-domain workflows span multiple skills and need coordinated execution
-- Overlapping capabilities across skills need deduplication or disambiguation
-- An existing skill-tree needs new skills or capabilities added incrementally
+Before creating or modifying tree output, read and follow `references/strict_conformance.md`. Do not use substitute workflows, fast versions, heuristic-only splitting, or partial validation. If full conformance is impractical, stop and report the blocker before continuing.
 
 ---
 
@@ -123,6 +119,7 @@ Create all files in the target directory. **Small files (≤10KB) use Write tool
 .agent/skills/{skill-name}-tree/      # Codex CLI / other AGENTS.md-aware agents
 ├── ROOT.md
 ├── SKILL-TREE.md              # Directory structure overview
+├── GENERATION-REPORT.md       # Required evidence (see Strict Conformance)
 ├── {module1}/
 │   ├── ROUTER.md
 │   └── {submodule}/
@@ -130,13 +127,10 @@ Create all files in the target directory. **Small files (≤10KB) use Write tool
 └── ...
 ```
 
-### Mode 1 Final Step: Validation
-After generating all files, you **MUST** execute every check in `references/validation_template.md`.
+### Mode 1 Final Step: Validation + Report
 
-**How to run**: Read `references/validation_template.md` and execute each check sequentially. Do not treat this section as informational — it is an executable checklist. For each check:
-1. Perform the specified operations
-2. Record pass/fail status
-3. If any check fails, fix the generated files and re-run that check
+1. **Validate**: Execute every check in `references/validation_template.md`. Read the file and run each check sequentially — this is an executable checklist, not informational. Record pass/fail for each. If any check fails, fix the generated files and re-run that check.
+2. **Report**: Once all checks pass, create `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. The validation results recorded in step 1 go into this report.
 
 ---
 
@@ -191,6 +185,7 @@ Classify every capability group:
 {domain}-tree/
 ├── ROOT.md                        # Phase 1: 选 skill
 ├── SKILL-TREE.md                  # Overview with mapping table
+├── GENERATION-REPORT.md           # Required evidence (see Strict Conformance)
 ├── {skill_a}/                     # Skill A 的完整子树
 │   ├── ROUTER.md                  # Phase 2: 选能力
 │   └── {capability}/SKILL.md
@@ -225,13 +220,10 @@ Generate `cross-cutting/SKILL.md` following `references/cross_cutting_template.m
 1. Provides predefined cross-skill workflow definitions
 2. Includes a custom workflow fallback mechanism (mandatory, see L7)
 
-### Mode 2 Final Step: Validation
-After generating all files, you **MUST** execute every check in `references/validation_template.md`.
+### Mode 2 Final Step: Validation + Report
 
-**How to run**: Read `references/validation_template.md` and execute each check sequentially. Do not treat this section as informational — it is an executable checklist. For each check:
-1. Perform the specified operations
-2. Record pass/fail status
-3. If any check fails, fix the generated files and re-run that check
+1. **Validate**: Execute every check in `references/validation_template.md`. Read the file and run each check sequentially — this is an executable checklist, not informational. Record pass/fail for each. If any check fails, fix the generated files and re-run that check.
+2. **Report**: Once all checks pass, create `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. The validation results recorded in step 1 go into this report.
 
 ---
 
@@ -325,7 +317,7 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
    - Phase 1: 选 Skill — includes both existing skill and new skill
    - Phase 2: 选能力 — delegates to skill sub-tree ROUTER.md
    - Add 消歧规则 section
-   - Add 信号优先级 table (L8)
+   - Add 信号优先级 table
 5. **Create `shared/` directory** — initially empty, populated if Step C finds shared capabilities
 6. **Create `cross-cutting/SKILL.md`** — follow Mode 2 Step F template, include workflows combining existing + new skill
 7. **Update `SKILL-TREE.md`** — rewrite to Multi-Skill format with skill→capability mapping table and coverage stats
@@ -358,13 +350,10 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 7. **Update cross-cutting/SKILL.md** — add cross-skill workflow definitions + update dependencies (L7: most commonly missed step)
 8. **Update SKILL-TREE.md** — add rows to mapping table + update coverage stats
 
-### Mode 3 Final Step: Validation
-After generating all files, you **MUST** execute every check in `references/validation_template.md`.
+### Mode 3 Final Step: Validation + Report
 
-**How to run**: Read `references/validation_template.md` and execute each check sequentially. Do not treat this section as informational — it is an executable checklist. For each check:
-1. Perform the specified operations
-2. Record pass/fail status
-3. If any check fails, fix the generated files and re-run that check
+1. **Validate**: Execute every check in `references/validation_template.md`. Read the file and run each check sequentially — this is an executable checklist, not informational. Record pass/fail for each. If any check fails, fix the generated files and re-run that check.
+2. **Report**: Once all checks pass, create `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. The validation results recorded in step 1 go into this report.
 
 ---
 
@@ -389,6 +378,7 @@ Reference templates are available in `references/`:
 web-development-tree/
 ├── ROOT.md
 ├── SKILL-TREE.md
+├── GENERATION-REPORT.md
 ├── frontend/
 │   ├── ROUTER.md
 │   ├── react/SKILL.md

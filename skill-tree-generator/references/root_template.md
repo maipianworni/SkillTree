@@ -86,7 +86,7 @@ This template defines the root-level routing protocol for a skill-tree.
 - 仅提到 **"{共享关键词}"** 无上下文 → 询问用户选择
 - 对话中已建立 Skill 上下文 → 不再重新选 Skill，直接进入其子树
 
-### 信号优先级 [L8 预防]
+### 信号优先级
 
 当用户 prompt 中同时包含多个信号时，按以下优先级处理：
 
