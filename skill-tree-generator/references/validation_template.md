@@ -17,6 +17,8 @@
 | Bitfun      | `AGENTS.md` | `.bitfun/skills/`                       |
 | Claude Code | `CLAUDE.md` | `.claude/skills/`                       |
 | Codex CLI   | `AGENTS.md` | `.agent/skills/`（或用户自定义目录）      |
+| Hermes      | `AGENTS.md` | `.hermes/skills/`                       |
+| OpenClaw    | `AGENTS.md` | `.openclaw/skills/`                     |
 | OpenCode    | `AGENTS.md` | `.opencode/skills/`                     |
 | 其他支持 AGENTS.md 的 agent（Cursor / Aider / Jules 等） | `AGENTS.md` | 同上 |
 

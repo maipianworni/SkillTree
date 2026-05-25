@@ -11,6 +11,9 @@
 - **Bitfun**（skill 目录 `.bitfun/skills/`，记忆文件 `AGENTS.md`）
 - **Claude Code**（原生支持，skill 目录 `.claude/skills/`，记忆文件 `CLAUDE.md`）
 - **Codex CLI**（通过 `AGENTS.md` 注入路由协议，skill 目录可自定义，推荐 `.agent/skills/`）
+- **OpenClaw**（skill 目录 `.openclaw/skills/`，记忆文件 `AGENTS.md`）
+- **OpenCode**（skill 目录 `.opencode/skills/`，记忆文件 `AGENTS.md`）
+- **Hermes**（skill 目录 `.hermes/skills/`，记忆文件 `AGENTS.md`）
 - 其他读取 `AGENTS.md` 的 agent（Cursor、Aider、Jules 等）同理
 
 ---
@@ -99,6 +102,40 @@
    - skill-tree 写入 `.opencode/skills/{name}-tree/`
    - 项目根 `AGENTS.md` 追加路由协议（若不存在则创建）
 
+**用法 E：OpenClaw**
+
+1. 将 `skill-tree-generator/` 放到工程 `.openclaw/skills/` 下（或自定义目录）
+
+2. 运行：
+   
+   ```
+   ./scripts/aggregate-skills.sh .openclaw/skills --agent openclaw
+   ```
+
+3. 按提示将输出的指令贴回 OpenClaw（形如 `/skill-tree-generator --aggregate ...`）
+
+4. 生成结果：
+   
+   - skill-tree 写入 `.openclaw/skills/{name}-tree/`
+   - 项目根 `AGENTS.md` 追加路由协议（若不存在则创建）
+
+**用法 F：Hermes**
+
+1. 将 `skill-tree-generator/` 放到工程 `.hermes/skills/` 下（或自定义目录）
+
+2. 运行：
+   
+   ```
+   ./scripts/aggregate-skills.sh .hermes/skills --agent hermes
+   ```
+
+3. 按提示将输出的指令贴回 Hermes（形如 `/skill-tree-generator --aggregate ...`）
+
+4. 生成结果：
+   
+   - skill-tree 写入 `.hermes/skills/{name}-tree/`
+   - 项目根 `AGENTS.md` 追加路由协议（若不存在则创建）
+
 ---
 
 ## 直接使用Skill
@@ -117,12 +154,14 @@
 
 ## 路径约定
 
-| Agent       | Skill 目录            | 记忆文件        |
-| ----------- | ------------------- | ----------- |
-| Bitfun      | `.bitfun/skills/`   | `AGENTS.md` |
-| Claude Code | `.claude/skills/`   | `CLAUDE.md` |
-| Codex CLI   | `.agent/skills/`    | `AGENTS.md` |
-| OpenCode    | `.opencode/skills/` | `AGENTS.md` |
+| Agent       | Skill 目录             | 记忆文件        |
+| ----------- | -------------------- | ----------- |
+| Bitfun      | `.bitfun/skills/`    | `AGENTS.md` |
+| Claude Code | `.claude/skills/`    | `CLAUDE.md` |
+| Codex CLI   | `.agent/skills/`     | `AGENTS.md` |
+| OpenClaw    | `.openclaw/skills/`  | `AGENTS.md` |
+| OpenCode    | `.opencode/skills/`  | `AGENTS.md` |
+| Hermes      | `.hermes/skills/`    | `AGENTS.md` |
 
 ### 同一仓库想让两种 Agent 都用？
 
