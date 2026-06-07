@@ -10,7 +10,7 @@ If full conformance is too large, slow, ambiguous, or blocked, stop and report t
 
 ## Pre-Write Gate
 
-Before creating or modifying tree output files, produce a checklist for the selected mode and mark every required step as pending: Mode 1 Step 1-6, Mode 2 Step A-F, or Mode 3 Step A through the selected branch, plus Final Validation.
+Before creating or modifying tree output files, produce a checklist for the selected mode and mark every required step as pending: Mode 1 Step 1-7, Mode 2 Step A-G, or Mode 3 Step A-F along the selected branch.
 
 ## Required Evidence
 
@@ -21,6 +21,9 @@ Every generated or updated tree must include `GENERATION-REPORT.md`. Do not clai
 - tree design/topology decision: Mode 1 module design, Mode 2 capability matrix plus shared/unique classification and overlap_rate, or Mode 3 branch decision and update plan
 - leaf decomposition and single-leaf justifications
 - reference handling decisions
-- validation results for every applicable `validation_template.md` check
+- validation results for every applicable `validation_template.md` check, grouped by executor:
+  - main agent source-dependent checks and any fixes/remeasurement
+  - sub agent tree-only checks, with confirmation that the sub agent did not read source skills or modify files
+  - revalidation results after every fix
 
 For multi-skill trees, `cross-cutting/SKILL.md` must also exist. Missing evidence means the task is incomplete.

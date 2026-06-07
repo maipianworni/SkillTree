@@ -2,11 +2,47 @@
 
 生成完成后必须逐项执行以下检查。**不可跳过任何一项。**
 
+## 执行架构
+
+Validation 由主 agent 统筹。主 agent 保留源 skill 上下文并负责所有修改；子 agent 只做 tree-only 只读验证，用干净上下文检查生成后的 tree 结构。
+
+### 职责划分
+
+| 执行方 | 检查项 | 职责边界 |
+|--------|--------|----------|
+| **主 agent** | Check 1、2、9、10、12；Multi-Skill 另加 M3 | 使用生成阶段已有的源 skill 内容、source inventory、引用盘点结果；负责所有文件修改、复验调度和报告写入 |
+| **子 agent** | Check 3、4、5、6、7、8、11；Multi-Skill 另加 M1、M2、M4 | 只读取 tree 目录和本模板中对应检查项；不读取源 skill；不修改任何文件 |
+
+### 执行顺序
+
+1. **主 agent 准备验证上下文**：确认 tree 路径、Single-Skill/Multi-Skill 类型、源 skill 清单、能力清单、引用盘点结果。
+2. **主 agent 执行 source-dependent 检查**：运行 Check 1、2、9、10、12；Multi-Skill 树另运行 M3。
+3. **主 agent 启动子 agent 执行 tree-only 检查**：子 agent 在干净上下文中运行 Check 3、4、5、6、7、8、11；Multi-Skill 树另运行 M1、M2、M4。
+4. **主 agent 合并验证结果**：汇总主 agent 和子 agent 的 pass/fail、失败原因、证据路径。
+5. **主 agent 修复并复验**：主 agent 负责所有修改；source-dependent 失败项由主 agent 复验，tree-only 失败项启动新的子 agent 复验。
+6. **主 agent 写入报告**：所有检查通过后，将完整验证结果写入 `GENERATION-REPORT.md`。
+
+### 子 Agent Prompt 要求
+
+启动 general-purpose 子 agent 时，prompt 必须明确：
+
+```text
+你只执行 tree-only validation。
+输入：tree 根目录路径、validation_template.md 中 Check 3/4/5/6/7/8/11；若是 Multi-Skill 树，还包括 M1/M2/M4。
+只读取 tree 目录下的文件和上述检查定义。
+不要读取源 skill、源 skill 引用文件、AGENTS.md 或 CLAUDE.md。
+不要修改任何文件。
+逐项返回 pass/fail；失败项必须包含具体文件路径、原因和建议修复方向。
+以结构化格式返回结果给主 agent。
+```
+
 ---
 
 ## Validation Checklist
 
 ### Check 1: Agent 记忆文件存在性
+
+**执行方**: 主 agent（permission-bound，可能修改 AGENTS.md / CLAUDE.md）
 
 确认项目根目录有对应 agent 的记忆文件，且包含 skill-tree 路由协议。
 
@@ -50,6 +86,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 ### Check 2: Coverage (能力覆盖率)
 
+**执行方**: 主 agent（source-dependent，复用 source inventory）
+
 - 统计源 skill 中的每个能力
 - 确认每个能力恰好出现在一个叶节点中
 - 确认 SKILL-TREE.md 映射表中的总数与实际一致
@@ -64,6 +102,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 ---
 
 ### Check 3: Reachability (可达性)
+
+**执行方**: 子 agent（tree-only）
 
 - 从 ROOT.md 出发追踪每条路由到叶节点
 - 确认所有叶文件均可达
@@ -81,6 +121,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 ### Check 4: Disambiguation (消歧完整性)
 
+**执行方**: 子 agent（tree-only）
+
 - 识别出现在多个兄弟节点中的关键词
 - 对于 Multi-Skill 树：确认 ROOT.md 对每个共享关键词有消歧规则
 
@@ -95,6 +137,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 ### Check 5: Depth (深度)
 
+**执行方**: 子 agent（tree-only）
+
 - 从 ROOT.md 到任何叶节点的路径不得超过 4 级
 
 **操作步骤**:
@@ -106,6 +150,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 ---
 
 ### Check 6: Keyword Quality (关键词质量)
+
+**执行方**: 子 agent（tree-only）
 
 - 每个叶节点必须有清晰、互斥的触发条件
 - 适用时包含双语关键词
@@ -121,6 +167,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 ### Check 7: Cross-reference Integrity (交叉引用完整性)
 
+**执行方**: 子 agent（tree-only）
+
 - 每个 "Related Skills" 路径必须解析到实际存在的文件
 - 兄弟引用使用 `../{sibling}/SKILL.md`，而非 `./{sibling}/SKILL.md`
 
@@ -134,6 +182,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 ---
 
 ### Check 8: Functional Routing Tests (功能路由测试)
+
+**执行方**: 子 agent（tree-only）
 
 构造 ≥ 5 个测试用例（3 简单 + 2 复杂），模拟用户 prompt：
 
@@ -154,6 +204,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 ### Check 9: Content Preservation (内容保留)
 
+**执行方**: 主 agent（source-dependent，复用源 skill 完整内容）
+
 - 确认源 skill 中的所有内容在叶节点中都有保留
 - 源 skill 中的指令在拆分过程中没有丢失
 
@@ -168,6 +220,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 ### Check 10: Source Skill Existence (源技能存在性)
 
+**执行方**: 主 agent（source-dependent，复用源 skill 路径清单）
+
 - 确认生成 tree 时引用的每个源 skill 都存在且内容非空
 - 防止生成指向不存在文件的存根
 
@@ -181,6 +235,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 ---
 
 ### Check 11: No Stub Files (禁止存根)
+
+**执行方**: 子 agent（tree-only）
 
 - 检查每个叶节点是否包含指向外部文件的存根模式
 - agent 仅加载 tree 就必须能执行任务
@@ -205,6 +261,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 ### Check 12: Reference File Handling (引用文件处理)
 
+**执行方**: 主 agent（source-dependent，复用引用盘点结果）
+
 确认所有源技能的外部引用已正确处理：
 
 **操作步骤**:
@@ -222,18 +280,26 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 ## Multi-Skill 额外检查 (仅 Multi-Skill 树)
 
 ### Check M1: Shared Keyword Coverage
+**执行方**: 子 agent（tree-only）
+
 - 列出 2+ 个 skill 共有的所有能力
 - 确认 ROOT.md 的消歧规则覆盖每个共享词
 
 ### Check M2: Cross-Skill Path Non-interference
+**执行方**: 子 agent（tree-only）
+
 - 追踪 3+ 条来自不同 skill 的路由
 - 确认没有错误路由到其他 skill 子树
 
 ### Check M3: Shared Leaf Accuracy
+**执行方**: 主 agent（source-dependent，复用跨 skill 能力对比结果）
+
 - 对于 Shared-identical 叶节点：确认指令完全相同
 - 如果指令有任何差异，拆分为独立叶节点
 
 ### Check M4: Cross-Cutting Workflow Coverage
+**执行方**: 子 agent（tree-only）
+
 - 对每个 skill，确认 cross-cutting/SKILL.md 至少有一个涉及它的工作流
 - 确认 cross-cutting 列出了所有 skill 的依赖关系
 
@@ -242,6 +308,7 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 ## Validation Failure Protocol
 
 如果任何检查失败：
-1. 直接在生成的文件中修复问题
-2. 重新运行失败的检查以确认修复
-3. 记录问题类型用于未来改进
+1. 主 agent 直接在生成的文件中修复问题；子 agent 不做任何修改。
+2. 如果失败项属于 Check 1、2、9、10、12 或 M3，由主 agent 复验。
+3. 如果失败项属于 Check 3、4、5、6、7、8、11 或 M1、M2、M4，启动新的子 agent 复验对应检查。
+4. 将失败原因、修复内容、复验结果记录到 `GENERATION-REPORT.md`。

@@ -127,10 +127,10 @@ Create all files in the target directory. **Small files (≤10KB) use Write tool
 └── ...
 ```
 
-### Mode 1 Final Step: Validation + Report
+### Mode 1 Step 7: Validation + Report
 
-1. **Validate**: Execute every check in `references/validation_template.md`. Read the file and run each check sequentially — this is an executable checklist, not informational. Record pass/fail for each. If any check fails, fix the generated files and re-run that check.
-2. **Report**: Once all checks pass, create `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. The validation results recorded in step 1 go into this report.
+1. **Validate**: Read `references/validation_template.md` and execute its **执行架构** exactly. For Mode 1, run the Single-Skill checks only: main agent handles source-dependent checks and all fixes; sub agent handles only tree-only checks.
+2. **Report**: Once all checks pass, create `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. Include validation results from both the main agent and sub agent.
 
 ---
 
@@ -220,10 +220,10 @@ Generate `cross-cutting/SKILL.md` following `references/cross_cutting_template.m
 1. Provides predefined cross-skill workflow definitions
 2. Includes a custom workflow fallback mechanism (mandatory, see L7)
 
-### Mode 2 Final Step: Validation + Report
+### Mode 2 Step G: Validation + Report
 
-1. **Validate**: Execute every check in `references/validation_template.md`. Read the file and run each check sequentially — this is an executable checklist, not informational. Record pass/fail for each. If any check fails, fix the generated files and re-run that check.
-2. **Report**: Once all checks pass, create `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. The validation results recorded in step 1 go into this report.
+1. **Validate**: Read `references/validation_template.md` and execute its **执行架构** exactly. For Mode 2, run all base checks plus Multi-Skill checks M1-M4: main agent handles source-dependent checks and all fixes; sub agent handles only tree-only checks.
+2. **Report**: Once all checks pass, create `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. Include validation results from both the main agent and sub agent.
 
 ---
 
@@ -251,14 +251,14 @@ Read `<tree-path>/ROOT.md` and check:
 | 路由目标 | `./{module}/ROUTER.md` | `./{skill-name}/ROUTER.md` |
 | 消歧规则 | 无 | 有消歧规则 section |
 
-### Mode 3 Step A2: For Single-Skill Tree — Same Skill or New Skill?
+### Mode 3 Step B: For Single-Skill Tree — Same Skill or New Skill?
 
 **This is the critical branch point.** When the existing tree is Single-Skill, determine whether `--add` is adding capabilities to the **same skill** or adding a **different skill**:
 
 1. Read the tree's `SKILL-TREE.md` to identify the existing skill name(s)
 2. Compare with the `--add` skill name/domain:
-   - **Same skill** (e.g., tree is `web-dev-tree`, adding more `web-dev` capabilities) → **Step B** (add capability to existing skill)
-   - **Different skill** (e.g., tree is `web-dev-tree`, adding `react`) → **Step B2** (transform to Multi-Skill, then add new skill)
+   - **Same skill** (e.g., tree is `web-dev-tree`, adding more `web-dev` capabilities) → **Step C** (add capability to existing skill)
+   - **Different skill** (e.g., tree is `web-dev-tree`, adding `react`) → **Step D** (transform to Multi-Skill), then **Step E** (add new skill)
 
 **How to judge "same" vs "different":**
 - If the `--add` skill's domain overlaps significantly with the existing tree's domain AND the skill name matches the tree's original skill → same skill
@@ -266,11 +266,20 @@ Read `<tree-path>/ROOT.md` and check:
 - When uncertain, treat as **different skill** (safer to restructure early than to force capabilities into wrong module)
 
 **分支汇总：**
-- **Single-Skill Tree + Same skill** → 执行 **Step B**（添加能力到已有 skill）
-- **Single-Skill Tree + Different skill** → 执行 **Step B2**（转型为 Multi-Skill tree，然后添加新 skill）
-- **Multi-Skill Tree** → 执行 **Step C**（添加新 skill 到 Multi-Skill tree）
+- **Single-Skill Tree + Same skill** → 执行 **Step C**（添加能力到已有 skill）
+- **Single-Skill Tree + Different skill** → 执行 **Step D**（转型为 Multi-Skill tree）→ **Step E**（添加新 skill）
+- **Multi-Skill Tree** → 执行 **Step E**（添加新 skill 到 Multi-Skill tree）
 
-### Mode 3 Step B2: Transform Single-Skill Tree to Multi-Skill Tree
+### Mode 3 Step C: Adding a new capability to the SAME skill (Single-Skill tree)
+
+**前提**: Step B 已确认 `--add` 的技能与现有 Single-Skill tree 是同一个 skill。
+
+1. Identify which module/leaf the new capability belongs to
+2. Add to the leaf's workflow and examples
+3. Update SKILL-TREE.md mapping table
+4. Enrich keyword signals if the capability introduces new intent patterns
+
+### Mode 3 Step D: Transform Single-Skill Tree to Multi-Skill Tree
 
 When adding a different skill to a Single-Skill tree, the tree must be restructured from Mode 1 format to Mode 2 format before adding the new skill.
 
@@ -297,7 +306,7 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 │   │   ├── ROUTER.md    # 保持不变
 │   │   └── {leaf}/SKILL.md
 │   └── {module2}/...
-├── {new-skill}/         # 新 skill 的子树（按 Step C 生成）
+├── {new-skill}/         # 新 skill 的子树（按 Step E 生成）
 │   ├── ROUTER.md
 │   └── ...
 ├── shared/              # 共享能力目录
@@ -318,28 +327,19 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
    - Phase 2: 选能力 — delegates to skill sub-tree ROUTER.md
    - Add 消歧规则 section
    - Add 信号优先级 table
-5. **Create `shared/` directory** — initially empty, populated if Step C finds shared capabilities
+5. **Create `shared/` directory** — initially empty, populated if Step E finds shared capabilities
 6. **Create `cross-cutting/SKILL.md`** — follow Mode 2 Step F template, include workflows combining existing + new skill
 7. **Update `SKILL-TREE.md`** — rewrite to Multi-Skill format with skill→capability mapping table and coverage stats
 8. **Delete original top-level module directories** — after moving modules into `{existing-skill}/`, the original `{module1}/`, `{module2}/`, etc. directories at the tree root must be physically deleted. These are now orphan duplicates that must not remain alongside the new Multi-Skill structure.
-9. **Then proceed to add the new skill** — execute Step C (add new skill to Multi-Skill tree) for the `--add` skill
+9. **Then proceed to add the new skill** — execute Step E (add new skill to Multi-Skill tree) for the `--add` skill
 
 **Important constraints during transformation:**
 - **Preserve all existing leaf content** — no SKILL.md files are modified, only moved
 - **Preserve all routing logic** — the old ROOT.md's routing conditions must be accurately transferred to `{existing-skill}/ROUTER.md`
 - **Do NOT create stubs** — shared/ may be empty initially; only populate if shared capabilities are detected
-- After transformation + adding new skill, run full Mode 2 validation
+- After transformation + adding new skill, run Mode 3 Step F validation with Multi-Skill checks
 
-### Mode 3 Step B: Adding a new capability to the SAME skill (Single-Skill tree)
-
-**前提**: Step A2 已确认 `--add` 的技能与现有 Single-Skill tree 是同一个 skill。
-
-1. Identify which module/leaf the new capability belongs to
-2. Add to the leaf's workflow and examples
-3. Update SKILL-TREE.md mapping table
-4. Enrich keyword signals if the capability introduces new intent patterns
-
-### Mode 3 Step C: Adding a new skill to existing Multi-Skill tree
+### Mode 3 Step E: Adding a new skill to existing Multi-Skill tree
 
 1. **Analyze new skill** — extract full capability set。执行 `references/error_handling.md` 中的**Error Severity & Handling Strategy**：源技能不存在 → Fatal 报错终止
 2. **Build comparison matrix** against existing skills (same as Mode 2 Step A)
@@ -350,10 +350,10 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 7. **Update cross-cutting/SKILL.md** — add cross-skill workflow definitions + update dependencies (L7: most commonly missed step)
 8. **Update SKILL-TREE.md** — add rows to mapping table + update coverage stats
 
-### Mode 3 Final Step: Validation + Report
+### Mode 3 Step F: Validation + Report
 
-1. **Validate**: Execute every check in `references/validation_template.md`. Read the file and run each check sequentially — this is an executable checklist, not informational. Record pass/fail for each. If any check fails, fix the generated files and re-run that check.
-2. **Report**: Once all checks pass, create `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. The validation results recorded in step 1 go into this report.
+1. **Validate**: Read `references/validation_template.md` and execute its **执行架构** exactly. For Mode 3, run base checks; if the resulting tree is Multi-Skill, also run M1-M4. Main agent handles source-dependent checks and all fixes; sub agent handles only tree-only checks.
+2. **Report**: Once all checks pass, create or update `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. Include validation results from both the main agent and sub agent.
 
 ---
 
@@ -413,7 +413,7 @@ web-development-tree/
 | L9 | 共享叶节点指令不同 | 只有完全一致才能合并为 Shared-identical |
 | L10 | 存根问题 | 已制度化 → `references/error_handling.md` |
 | L11 | 叶节点指令弱化 | 保留所有执行级指令（代码、阈值、clamp 行为） |
-| L12 | Mode 3 未转型 Single-Skill | Step A2 显式判断 same/different skill |
-| L13 | 转型后未删除顶级模块 | Step B2 步骤 8 显式删除原模块目录 |
+| L12 | Mode 3 未转型 Single-Skill | Step B 显式判断 same/different skill |
+| L13 | 转型后未删除顶级模块 | Step D 步骤 8 显式删除原模块目录 |
 | L14 | 引用文件未内联/拷贝 | 已制度化 → `references/error_handling.md` |
 | L15 | 参考文档索引未清理 | 已制度化 → `references/error_handling.md` |
