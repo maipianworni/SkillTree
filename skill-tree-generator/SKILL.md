@@ -152,7 +152,7 @@ Examples:
 /skill-tree-generator --aggregate react,vue,svelte --domain frontend
 ```
 
-Multi-skill trees require a two-phase routing: **Phase 1 selects the skill, Phase 2 selects the capability within that skill.**
+Multi-skill trees require a two-phase routing: **Phase 1 selects one or more skills, Phase 2 selects one or more capabilities within each matched skill.** Multi-intent prompts must preserve all matched route paths.
 
 ### Mode 2 Step A: Cross-Skill Capability Collection
 
@@ -183,7 +183,7 @@ Classify every capability group:
 
 ```
 {domain}-tree/
-├── ROOT.md                        # Phase 1: 选 skill
+├── ROOT.md                        # Phase 1: 选一个或多个 skill
 ├── SKILL-TREE.md                  # Overview with mapping table
 ├── GENERATION-REPORT.md           # Required evidence (see Strict Conformance)
 ├── {skill_a}/                     # Skill A 的完整子树
@@ -209,6 +209,8 @@ Classify every capability group:
 ### Mode 2 Step D: Multi-Skill ROOT.md Generation
 
 ROOT.md must implement two-phase routing. Read `references/root_template.md` Multi-Skill section and generate ROOT.md following that template.
+
+**Multi-intent requirement**: Generated Multi-Skill ROOT.md must support one prompt matching multiple route paths. When a prompt contains multiple independent intents, multiple skill names, multiple unique domain terms, or multiple separable subtasks, the router must split the prompt into subtasks and preserve every matched Skill/leaf route. Use `cross-cutting/SKILL.md` only when the matched paths need workflow coordination, sequencing, or data handoff; otherwise route into all matched skill subtrees directly.
 
 ### Mode 2 Step E: Multi-Skill SKILL-TREE.md Overview
 
@@ -247,7 +249,7 @@ Read `<tree-path>/ROOT.md` and check:
 
 | 特征 | Single-Skill Tree | Multi-Skill Tree |
 |------|-------------------|------------------|
-| 路由表标题 | "Step 1: L1 路由" | "Phase 1: 选 Skill" |
+| 路由表标题 | "Step 1: L1 路由" | "Phase 1: 选 Skill" 或 "Phase 1: 选一个或多个 Skill" |
 | 路由目标 | `./{module}/ROUTER.md` | `./{skill-name}/ROUTER.md` |
 | 消歧规则 | 无 | 有消歧规则 section |
 
@@ -298,7 +300,7 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 **Target structure (Multi-Skill):**
 ```
 {tree}/
-├── ROOT.md              # Phase 1: 选 Skill, Phase 2: 选能力
+├── ROOT.md              # Phase 1: 选一个或多个 Skill, Phase 2: 选能力
 ├── SKILL-TREE.md
 ├── {existing-skill}/    # 原 Single-Skill 的模块移入此处
 │   ├── ROUTER.md        # 新建：原 L1 路由表移入此处
@@ -323,8 +325,9 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
    - Add `[L2]` level marker
    - Preserve all routing conditions and context hints
 4. **Rewrite ROOT.md** to Multi-Skill format (follow Mode 2 Step D template):
-   - Phase 1: 选 Skill — includes both existing skill and new skill
-   - Phase 2: 选能力 — delegates to skill sub-tree ROUTER.md
+   - Phase 1: 选一个或多个 Skill — includes both existing skill and new skill, and preserves multi-intent matches
+   - Phase 2: 选能力 — delegates to every matched skill sub-tree ROUTER.md
+   - Add 多意图路由规则 section
    - Add 消歧规则 section
    - Add 信号优先级 table
 5. **Create `shared/` directory** — initially empty, populated if Step E finds shared capabilities
@@ -344,7 +347,7 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 1. **Analyze new skill** — extract full capability set。执行 `references/error_handling.md` 中的**Error Severity & Handling Strategy**：源技能不存在 → Fatal 报错终止
 2. **Build comparison matrix** against existing skills (same as Mode 2 Step A)
 3. **Identify new shared keywords** — any capability overlapping with existing skills
-4. **Update ROOT.md** — add new skill route + update 消歧规则 for ALL new shared keywords
+4. **Update ROOT.md** — add new skill route + update 多意图路由规则 and 消歧规则 for ALL new shared keywords. Ensure prompts mentioning the new skill plus existing skills can preserve multiple matched route paths.
 5. **Create new skill sub-tree** — `{new-skill}/ROUTER.md` + leaf SKILL.md files。执行 `references/error_handling.md` 中的**Reference File Processing Flow** Step R1-R4，遵循 **Self-Containment Rule**。大文件集使用 staging + 平台原生命令拷贝，禁止 Write 逐文件写入
 6. **Re-check shared leaves** — if new skill has identical capabilities, update shared leaf
 7. **Update cross-cutting/SKILL.md** — add cross-skill workflow definitions + update dependencies (L7: most commonly missed step)
@@ -409,7 +412,7 @@ web-development-tree/
 | L5 | 跨领域工作流遗漏 | ROOT.md 必须含并行读取多叶节点的指令 |
 | L6 | 映射表不准 | 逐条计数，禁止目测估算 |
 | L7 | Mode 3 遗漏 cross-cutting | 添加新 skill 时显式更新 cross-cutting/SKILL.md |
-| L8 | 关键词信号无分层 | 信号分 T1/T2/T3 三层，高 Tier 覆盖低 Tier |
+| L8 | 关键词信号无分层 | 单子任务内高 Tier 覆盖低 Tier；多意图先拆分子任务 |
 | L9 | 共享叶节点指令不同 | 只有完全一致才能合并为 Shared-identical |
 | L10 | 存根问题 | 已制度化 → `references/error_handling.md` |
 | L11 | 叶节点指令弱化 | 保留所有执行级指令（代码、阈值、clamp 行为） |
@@ -417,3 +420,4 @@ web-development-tree/
 | L13 | 转型后未删除顶级模块 | Step D 步骤 8 显式删除原模块目录 |
 | L14 | 引用文件未内联/拷贝 | 已制度化 → `references/error_handling.md` |
 | L15 | 参考文档索引未清理 | 已制度化 → `references/error_handling.md` |
+| L16 | Multi-Skill 多意图被吞并 | Multi-Skill ROOT 必须保留多个命中路径 |

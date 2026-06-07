@@ -303,6 +303,22 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 - 对每个 skill，确认 cross-cutting/SKILL.md 至少有一个涉及它的工作流
 - 确认 cross-cutting 列出了所有 skill 的依赖关系
 
+### Check M5: Multi-Intent Multi-Path Routing
+- 构造 ≥ 3 个多意图 prompt，确认一个 prompt 可以命中多个 route paths
+- 测试用例必须覆盖：
+  1. 多个明确 skill 名称 → 命中多个 skill 子树
+  2. 多个唯一领域词但未显式写 skill 名称 → 命中多个 skill 子树
+  3. 共享能力 + 专属能力并存 → 同时命中 shared leaf 和专属 skill leaf，或进入 cross-cutting 编排
+
+**操作步骤**:
+1. 对每个多意图 prompt，先拆分出独立子任务
+2. 手动追踪 ROOT.md Phase 1，列出所有命中的 Skill/ROUTER/shared/cross-cutting 路径
+3. 对每个命中的 Skill 路径继续追踪 Phase 2，直到 leaf SKILL.md
+4. 确认信号优先级只在单个子任务内部用于消歧，没有覆盖或丢弃其他子任务的命中路径
+5. 若子任务之间存在数据依赖，确认路由进入 `cross-cutting/SKILL.md` 并由其继续逐个 skill 路由；若无依赖，确认可直接保留多个并行 leaf 路径
+
+**通过标准**: 每个多意图测试用例都保留所有预期命中路径；不得只返回单个最高优先级路径，除非 prompt 本身只有一个可执行意图。
+
 ---
 
 ## Validation Failure Protocol
