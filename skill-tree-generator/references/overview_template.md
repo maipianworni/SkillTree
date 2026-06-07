@@ -58,13 +58,14 @@
 
 ## 路由原理
 ```
-用户意图 → ROOT.md (Phase 1: 选 Skill) → ROUTER.md (Phase 2: 选能力) → LEAF SKILL.md
+用户意图 → ROOT.md (Phase 1: 选一个或多个 Skill) → ROUTER.md (Phase 2: 选一个或多个能力) → LEAF SKILL.md
+多意图 prompt → 拆分子任务 → 保留所有命中的 Skill/leaf 路径；需要编排时进入 cross-cutting/SKILL.md
 ```
 
 ## 目录结构
 ```
 {domain}-tree/
-├── ROOT.md                          # Phase 1: 选 Skill
+├── ROOT.md                          # Phase 1: 选一个或多个 Skill
 ├── SKILL-TREE.md                    # 本文件
 │
 ├── {skill_a}/                       # {Skill_A} 子树
@@ -102,7 +103,7 @@
 
 ## 新增 Skill 指南
 1. 创建 `{new-skill}/ROUTER.md` + 叶节点
-2. 更新 ROOT.md Phase 1 路由表 + 消歧规则
+2. 更新 ROOT.md Phase 1 路由表 + 多意图路由规则 + 消歧规则
 3. 更新 cross-cutting/SKILL.md（工作流 + dependencies）
 4. 更新本文件映射表和覆盖统计
 ````
