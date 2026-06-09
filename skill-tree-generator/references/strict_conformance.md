@@ -14,7 +14,7 @@ Before creating or modifying tree output files, produce a checklist for the sele
 
 ## Required Evidence
 
-Every generated or updated tree must include `GENERATION-REPORT.md`. Do not claim completion unless it records:
+Every generated or updated tree must include `GENERATION-REPORT.md`. Validation and Routing Refinement may each write or update their own report sections independently. Do not claim completion unless the report records:
 
 - selected mode and completed step checklist
 - source skill inventory and non-empty SKILL.md checks
@@ -25,5 +25,10 @@ Every generated or updated tree must include `GENERATION-REPORT.md`. Do not clai
   - main agent source-dependent checks and any fixes/remeasurement
   - sub agent tree-only checks, with confirmation that the sub agent did not read source skills or modify files
   - revalidation results after every fix
+- Routing Refinement Stage results:
+  - covered routing nodes and sibling groups
+  - ambiguous/high-frequency/dynamically discovered shared signals
+  - regression prompt matrix with expected route paths and manual traces
+  - fixes and revalidation results after every refinement failure
 
 For multi-skill trees, `cross-cutting/SKILL.md` must also exist. Missing evidence means the task is incomplete.

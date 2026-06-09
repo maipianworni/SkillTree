@@ -11,16 +11,22 @@ Validation 由主 agent 统筹。主 agent 保留源 skill 上下文并负责所
 | 执行方 | 检查项 | 职责边界 |
 |--------|--------|----------|
 | **主 agent** | Check 1、2、9、10、12；Multi-Skill 另加 M3 | 使用生成阶段已有的源 skill 内容、source inventory、引用盘点结果；负责所有文件修改、复验调度和报告写入 |
-| **子 agent** | Check 3、4、5、6、7、8、11；Multi-Skill 另加 M1、M2、M4 | 只读取 tree 目录和本模板中对应检查项；不读取源 skill；不修改任何文件 |
+| **子 agent** | Check 3、4、5、6、7、8、11；Multi-Skill 另加 M1、M2、M4、M5 | 只读取 tree 目录和本模板中对应检查项；不读取源 skill；不修改任何文件 |
 
 ### 执行顺序
 
 1. **主 agent 准备验证上下文**：确认 tree 路径、Single-Skill/Multi-Skill 类型、源 skill 清单、能力清单、引用盘点结果。
 2. **主 agent 执行 source-dependent 检查**：运行 Check 1、2、9、10、12；Multi-Skill 树另运行 M3。
-3. **主 agent 启动子 agent 执行 tree-only 检查**：子 agent 在干净上下文中运行 Check 3、4、5、6、7、8、11；Multi-Skill 树另运行 M1、M2、M4。
+3. **主 agent 启动子 agent 执行 tree-only 检查**：子 agent 在干净上下文中运行 Check 3、4、5、6、7、8、11；Multi-Skill 树另运行 M1、M2、M4、M5。
 4. **主 agent 合并验证结果**：汇总主 agent 和子 agent 的 pass/fail、失败原因、证据路径。
 5. **主 agent 修复并复验**：主 agent 负责所有修改；source-dependent 失败项由主 agent 复验，tree-only 失败项启动新的子 agent 复验。
-6. **主 agent 写入报告**：所有检查通过后，将完整验证结果写入 `GENERATION-REPORT.md`。
+6. **主 agent 写入 validation 证据**：所有基础检查通过后，将完整 validation 结果写入或更新 `GENERATION-REPORT.md` 的 validation section。Validation 不等待 Routing Refinement Stage 的结果；后续 refinement 阶段会写入或更新自己的独立 section。
+
+### 完成声明约束
+
+- 主 agent 必须等待 validation subagent 返回结果，并完成所有失败项修复和复验后，才可声明 validation 通过。
+- validation 通过后只能说明“基础 validation 已完成/已通过”；不得输出 `The unified skill tree has been generated successfully`、`generated successfully` 或等价最终成功总结。
+- 最终成功总结只能在 `routing_refinement.md` 也执行完成、所有 refinement subagent 结果返回、失败项修复并复验通过后输出。
 
 ### 子 Agent Prompt 要求
 
@@ -28,7 +34,7 @@ Validation 由主 agent 统筹。主 agent 保留源 skill 上下文并负责所
 
 ```text
 你只执行 tree-only validation。
-输入：tree 根目录路径、validation_template.md 中 Check 3/4/5/6/7/8/11；若是 Multi-Skill 树，还包括 M1/M2/M4。
+输入：tree 根目录路径、validation_template.md 中 Check 3/4/5/6/7/8/11；若是 Multi-Skill 树，还包括 M1/M2/M4/M5。
 只读取 tree 目录下的文件和上述检查定义。
 不要读取源 skill、源 skill 引用文件、AGENTS.md 或 CLAUDE.md。
 不要修改任何文件。
@@ -304,6 +310,8 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 - 确认 cross-cutting 列出了所有 skill 的依赖关系
 
 ### Check M5: Multi-Intent Multi-Path Routing
+**执行方**: 子 agent（tree-only）
+
 - 构造 ≥ 3 个多意图 prompt，确认一个 prompt 可以命中多个 route paths
 - 测试用例必须覆盖：
   1. 多个明确 skill 名称 → 命中多个 skill 子树
@@ -326,5 +334,5 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 如果任何检查失败：
 1. 主 agent 直接在生成的文件中修复问题；子 agent 不做任何修改。
 2. 如果失败项属于 Check 1、2、9、10、12 或 M3，由主 agent 复验。
-3. 如果失败项属于 Check 3、4、5、6、7、8、11 或 M1、M2、M4，启动新的子 agent 复验对应检查。
-4. 将失败原因、修复内容、复验结果记录到 `GENERATION-REPORT.md`。
+3. 如果失败项属于 Check 3、4、5、6、7、8、11 或 M1、M2、M4、M5，启动新的子 agent 复验对应检查。
+4. 将失败原因、修复内容、复验结果写入或更新 `GENERATION-REPORT.md` 的 validation section。

@@ -130,7 +130,8 @@ Create all files in the target directory. **Small files (≤10KB) use Write tool
 ### Mode 1 Step 7: Validation + Report
 
 1. **Validate**: Read `references/validation_template.md` and execute its **执行架构** exactly. For Mode 1, run the Single-Skill checks only: main agent handles source-dependent checks and all fixes; sub agent handles only tree-only checks.
-2. **Report**: Once all checks pass, create `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. Include validation results from both the main agent and sub agent.
+2. **Routing Refinement Stage**: After base validation passes, read and execute `references/routing_refinement.md`. Start a clean tree-only sub agent to scan every routing layer (`ROOT.md` plus all `ROUTER.md` files), compare every sibling group, identify ambiguous/high-frequency and dynamically repeated shared signals, and return structured failures plus a regression prompt matrix. The main agent fixes routing tables and overview/report evidence, then starts a new sub agent to revalidate until all refinement checks pass.
+3. **Report**: Ensure `GENERATION-REPORT.md` in the tree root directory contains both independently written evidence sections, following the Required Evidence section in `references/strict_conformance.md`: validation results from both the main agent and sub agent, plus Routing Refinement Stage results.
 
 ---
 
@@ -224,8 +225,9 @@ Generate `cross-cutting/SKILL.md` following `references/cross_cutting_template.m
 
 ### Mode 2 Step G: Validation + Report
 
-1. **Validate**: Read `references/validation_template.md` and execute its **执行架构** exactly. For Mode 2, run all base checks plus Multi-Skill checks M1-M4: main agent handles source-dependent checks and all fixes; sub agent handles only tree-only checks.
-2. **Report**: Once all checks pass, create `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. Include validation results from both the main agent and sub agent.
+1. **Validate**: Read `references/validation_template.md` and execute its **执行架构** exactly. For Mode 2, run all base checks plus Multi-Skill checks M1-M5: main agent handles source-dependent checks and all fixes; sub agent handles only tree-only checks.
+2. **Routing Refinement Stage**: After base validation passes, read and execute `references/routing_refinement.md` in Multi-Skill mode. Start a clean tree-only sub agent to scan `ROOT.md`, every skill `ROUTER.md`, `shared/`, and `cross-cutting/`; compare only explicit routing tables as sibling groups, while using shared/cross-cutting leaves for multi-intent path preservation and target validity checks. Verify sibling distinguishability, high-frequency and dynamically repeated shared keyword handling, and return a regression prompt matrix. The main agent fixes routing tables, `SKILL-TREE.md`, and report evidence, then starts a new sub agent to revalidate until all refinement checks pass.
+3. **Report**: Ensure `GENERATION-REPORT.md` in the tree root directory contains both independently written evidence sections, following the Required Evidence section in `references/strict_conformance.md`: validation results from both the main agent and sub agent, plus Routing Refinement Stage results.
 
 ---
 
@@ -355,8 +357,9 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 
 ### Mode 3 Step F: Validation + Report
 
-1. **Validate**: Read `references/validation_template.md` and execute its **执行架构** exactly. For Mode 3, run base checks; if the resulting tree is Multi-Skill, also run M1-M4. Main agent handles source-dependent checks and all fixes; sub agent handles only tree-only checks.
-2. **Report**: Once all checks pass, create or update `GENERATION-REPORT.md` in the tree root directory, following the Required Evidence section in `references/strict_conformance.md`. Include validation results from both the main agent and sub agent.
+1. **Validate**: Read `references/validation_template.md` and execute its **执行架构** exactly. For Mode 3, run base checks; if the resulting tree is Multi-Skill, also run M1-M5. Main agent handles source-dependent checks and all fixes; sub agent handles only tree-only checks.
+2. **Routing Refinement Stage**: After base validation passes, read and execute `references/routing_refinement.md`. Use Single-Skill mode for Single-Skill results and Multi-Skill mode for transformed or existing Multi-Skill results. The sub agent remains tree-only/read-only, checks dynamically repeated shared signals, and returns structured failures plus a regression prompt matrix; the main agent fixes `ROOT.md`, all affected `ROUTER.md` files, `SKILL-TREE.md`, and report evidence, then starts a new sub agent for tree-only revalidation.
+3. **Report**: Ensure `GENERATION-REPORT.md` in the tree root directory contains both independently written evidence sections, following the Required Evidence section in `references/strict_conformance.md`: validation results from both the main agent and sub agent, plus Routing Refinement Stage results.
 
 ---
 
@@ -369,6 +372,7 @@ Reference templates are available in `references/`:
 - `cross_cutting_template.md` - Cross-cutting workflows template (Multi-Skill)
 - `overview_template.md` - SKILL-TREE.md overview template
 - `validation_template.md` - Executable validation checklist (MUST run after generation)
+- `routing_refinement.md` - Standalone second-stage routing table refinement workflow (MUST run after validation)
 - `error_handling.md` - Error Handling, Reference File Processing, Self-Containment Rule (Unified Specification)
 - `lessons_learned.md` - Lessons Learned（L1-L15）
 

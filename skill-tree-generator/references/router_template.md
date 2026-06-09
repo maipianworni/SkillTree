@@ -18,6 +18,15 @@ This template defines the routing logic for non-leaf nodes in a skill-tree.
 | {condition3} | Read `./{path3}/SKILL.md` |
 | 其他/未明确 | Read `./{default}/SKILL.md` |
 
+## Sibling 差异说明
+
+生成后必须为本路由表填写以下信息，避免同层节点只靠宽泛动词区分：
+
+| 下一跳 | Unique positive signals | Shared/ambiguous signals | 冲突处理 / fallback |
+|--------|-------------------------|--------------------------|---------------------|
+| `./{path1}/ROUTER.md` | {仅该路径命中的领域词/对象/文件类型} | {与 sibling 共享的词} | {优先级或询问用户策略} |
+| `./{path2}/SKILL.md` | {仅该路径命中的领域词/对象/文件类型} | {与 sibling 共享的词} | {优先级或询问用户策略} |
+
 注意：如果当前对话中用户已明确说明{context_hint}，优先以对话上下文为准。
 
 **路由追踪**：当追踪模式激活时，输出 `[Route]   → <匹配的能力> [LEAF]`。若匹配多个则每个输出一行。
@@ -61,6 +70,18 @@ This template defines the routing logic for non-leaf nodes in a skill-tree.
    | .tsx/.jsx 文件 | Read `./react/SKILL.md` |
    | .css/.scss/.less | Read `./css/SKILL.md` |
    ```
+
+### High-Frequency Ambiguous Signals
+
+Do not route siblings using only broad verbs that commonly appear across many capabilities:
+
+| 高频词 | 风险 | 推荐处理 |
+|--------|------|---------|
+| `create` / `新建` / `生成` | 多个 sibling 都可能创建对象 | 结合对象类型、Skill 名称、文件类型或上下文；否则询问用户 |
+| `export` / `导出` / `渲染` | 不同 sibling 可能导出不同产物 | 明确导出对象和目标格式 |
+| `list` / `info` / `查询` / `查看` | 几乎所有能力都有查询类动作 | 结合查询对象或领域术语 |
+| `config` / `配置` / `设置` | 配置作用域容易混淆 | 明确配置对象、环境或模块 |
+| `test` / `测试` / `验证` | 测试类型可能跨多个 sibling | 明确测试对象、框架或阶段 |
 
 ### Condition Composition
 
@@ -115,6 +136,15 @@ The `{context_hint}` should guide the router to consider relevant conversation c
 ```
 
 ---
+
+## Sibling Differentiation Requirements
+
+Every generated `ROUTER.md` must include a `Sibling 差异说明` section after the routing table:
+
+- Each next hop needs at least one unique positive signal, or an explicit context/disambiguation rule.
+- Shared signals such as `create/export/list/config/test` must be listed as ambiguous, not treated as decisive.
+- Conflict handling must state whether to apply priority, preserve multiple matches, route to `general`, or ask the user.
+- Fallback rows must not swallow prompts that contain a unique positive signal for another sibling.
 
 ## Best Practices
 
