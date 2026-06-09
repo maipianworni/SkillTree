@@ -10,7 +10,7 @@ If full conformance is too large, slow, ambiguous, or blocked, stop and report t
 
 ## Pre-Write Gate
 
-Before creating or modifying tree output files, produce a checklist for the selected mode and mark every required step as pending: Mode 1 Step 1-6, Mode 2 Step A-F, or Mode 3 Step A through the selected branch, plus Final Validation.
+Before creating or modifying tree output files, produce a checklist for the selected mode and mark every required step as pending: Mode 1 Step 1-7, Mode 2 Step A-G, or Mode 3 Step A-F along the selected branch.
 
 ## Required Evidence
 
