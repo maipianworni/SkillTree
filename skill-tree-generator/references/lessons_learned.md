@@ -51,23 +51,23 @@
 
 ## L12: Mode 3 添加不同 skill 时未转型 Single-Skill Tree
 
-**问题**: 初始用 Mode 1 将单个 skill 转为 skill-tree（Single-Skill 结构，ROOT.md 使用 "Step 1: L1 路由"），之后通过 Mode 3 `--update --add` 添加一个**不同的新 skill** 时，Step A 仅检测到 Single-Skill Tree 就直接进入 Step B（添加能力到已有 skill），导致新 skill 被错误地当作已有 skill 的能力增量处理，而非作为独立 skill 子树加入。
+**问题**: 初始用 Mode 1 将单个 skill 转为 skill-tree（Single-Skill 结构，ROOT.md 使用 "Step 1: L1 路由"），之后通过 Mode 3 `--update --add` 添加一个**不同的新 skill** 时，如果只检测到 Single-Skill Tree 就直接进入 Step C（添加能力到已有 skill），会导致新 skill 被错误地当作已有 skill 的能力增量处理，而非作为独立 skill 子树加入。
 
-**根源**: Mode 3 Step A 的分支逻辑缺失了 "Single-Skill + 不同 skill" 这种情况。Step B 的设计前提是添加能力到**同一个 skill**，不适用于添加全新 skill。
+**根源**: Mode 3 的分支逻辑缺失了 "Single-Skill + 不同 skill" 这种情况。Step C 的设计前提是添加能力到**同一个 skill**，不适用于添加全新 skill。
 
 **预防**:
-1. **Step A2 显式判断**: Single-Skill Tree 下必须进一步判断 `--add` 是同一 skill 还是不同 skill
-2. **Step B2 转型**: 不同 skill 时，必须先将 Single-Skill tree 转型为 Multi-Skill tree（Mode 2 结构），再添加新 skill
+1. **Step B 显式判断**: Single-Skill Tree 下必须进一步判断 `--add` 是同一 skill 还是不同 skill
+2. **Step D 转型**: 不同 skill 时，必须先将 Single-Skill tree 转型为 Multi-Skill tree（Mode 2 结构），再通过 Step E 添加新 skill
 3. **转型保留完整性**: 转型过程保持所有现有叶节点内容和路由逻辑不变，仅调整目录结构和 ROOT.md 格式
 
-## L13: Step B2 转型后未删除原 Single-Skill 顶级模块目录
+## L13: Step D 转型后未删除原 Single-Skill 顶级模块目录
 
 **问题**: Single-Skill tree 转型为 Multi-Skill tree 时，将原顶级模块目录（`charts/`、`interactivity/` 等）移入 `{existing-skill}/` 子目录后，未显式删除树根目录下的原模块目录。结果树中存在两套并行的模块文件——一套在 `{existing-skill}/` 下（Multi-Skill 路由目标），一套在树根目录下（孤儿文件，不被任何路由引用）。不仅造成混乱，还可能导致 agent 误读孤儿文件而绕过正确的 Phase 1 路由。
 
-**根源**: Step B2 的 "move" 步骤在实践中可能被执行为 "copy"（尤其当目标子目录已存在时），缺少显式的删除原目录步骤。
+**根源**: Step D 的 "move" 步骤在实践中可能被执行为 "copy"（尤其当目标子目录已存在时），缺少显式的删除原目录步骤。
 
 **预防**:
-1. **Step B2 步骤 8 显式删除**: 转换完成后，必须删除树根目录下的原模块目录（`{module1}/`、`{module2}/` 等）
+1. **Step D 步骤 8 显式删除**: 转换完成后，必须删除树根目录下的原模块目录（`{module1}/`、`{module2}/` 等）
 2. **验证检测**: Check 3 (Reachability) 会标记所有孤儿文件，转型后必须无孤儿文件
 3. **删除前确认**: 在删除前确认 `{existing-skill}/` 子目录下的对应文件已完整迁移
 

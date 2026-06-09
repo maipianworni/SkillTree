@@ -2,8 +2,6 @@
 
 生成完成后必须逐项执行以下检查。**不可跳过任何一项。**
 
----
-
 ## Validation Checklist
 
 ### Check 1: Agent 记忆文件存在性
@@ -222,10 +220,12 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 ## Multi-Skill 额外检查 (仅 Multi-Skill 树)
 
 ### Check M1: Shared Keyword Coverage
+
 - 列出 2+ 个 skill 共有的所有能力
 - 确认 ROOT.md 的消歧规则覆盖每个共享词
 
 ### Check M2: Cross-Skill Path Non-interference
+
 - 追踪 3+ 条来自不同 skill 的路由
 - 确认没有错误路由到其他 skill 子树
 
@@ -234,6 +234,7 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 - 如果指令有任何差异，拆分为独立叶节点
 
 ### Check M4: Cross-Cutting Workflow Coverage
+
 - 对每个 skill，确认 cross-cutting/SKILL.md 至少有一个涉及它的工作流
 - 确认 cross-cutting 列出了所有 skill 的依赖关系
 
