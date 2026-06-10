@@ -4,50 +4,84 @@
 
 ## 目标
 
-逐层扫描 skill tree 中每一个 routing node，确保每个 sibling node 都有稳定、可解释、可复验的差异信号。当发现路由冲突、共享关键词误判、fallback 过宽或多意图吞并时，由主 agent 修复路由表并重新启动只读 subagent 复验。
+逐层扫描 skill tree 中每一个 routing node，确保每个 sibling node 都有稳定、可解释、可复验的差异信号。检查必须遵循多路并行原则：由多个只读 subagent 分别执行独立检查、独立提出修改意见，最后由主 agent 通过汇审归并统一审定修复方案并修复路由表。当发现路由冲突、共享关键词误判、fallback 过宽或多意图吞并时，由主 agent 修复路由表并重新启动只读 subagent 复验。
 
 ## 执行边界
 
 | 执行方 | 职责 | 禁止事项 |
 |--------|------|----------|
-| 主 agent | 启动 subagent、汇总失败项、修改 `ROOT.md` / `ROUTER.md` / `SKILL-TREE.md` / `GENERATION-REPORT.md`、调度复验 | 不得跳过失败项；不得让 subagent 修改文件 |
-| subagent | tree-only/read-only 扫描 `ROOT.md`、所有 `ROUTER.md`、所有叶节点 `SKILL.md`、`SKILL-TREE.md` 和本文件 | 不读源 skill、源 skill 引用文件、AGENTS.md、CLAUDE.md；不修改任何文件 |
+| 主 agent | 启动多个并行 subagent、收集独立意见、执行汇审归并、修改 `ROOT.md` / `ROUTER.md` / `SKILL-TREE.md` / `GENERATION-REPORT.md`、调度复验 | 不得跳过失败项；不得让 subagent 修改文件；不得在汇审归并前直接套用单一路径意见 |
+| subagent | tree-only/read-only 扫描 `ROOT.md`、所有 `ROUTER.md`、所有叶节点 `SKILL.md`、`SKILL-TREE.md` 和本文件；只执行分配给自己的检查路径并返回独立意见 | 不读源 skill、源 skill 引用文件、AGENTS.md、CLAUDE.md；不修改任何文件；不依赖其他 subagent 的结论 |
 
 Multi-Skill 树中的 `shared/` 和 `cross-cutting/` 默认不是 sibling routing table。subagent 只在它们包含显式路由表时执行 R1-R4、R8 和 R9；否则只用于 R5 多意图路径保留、R6 目标路径有效性、R7 回归用例追踪和 R10 多意图依赖清晰度检查。
+
+## 多路并行原则
+
+Routing Refinement 必须拆成多个相互独立的只读检查路径。主 agent 可以按项目大小调整并行度，但默认至少启动以下 4 路：
+
+| lane_id | 检查范围 | 关注重点 |
+|---------|----------|----------|
+| `lane-a-disambiguation` | R1、R2、R4、R9 | sibling 互斥性、共享关键词、唯一正向信号、冲突严重度 |
+| `lane-b-fallback` | R3、R8 | fallback 边界、默认 leaf 是否过窄或过宽 |
+| `lane-c-path-regression` | R6、R7 | route target 有效性、回归 prompt 矩阵、手动追踪路径 |
+| `lane-d-multi-intent` | R5、R10 | 多意图路径保留、跨 domain/workflow 依赖边界 |
+
+并行检查必须满足：
+
+- 每个 lane 独立读取 tree 文件和本规则文件，独立返回 `pass/fail`、证据和 `recommended_fix`。
+- lane 之间不得共享中间结论；主 agent 不得要求某个 lane 复述或服从另一个 lane 的意见。
+- 同一文件、同一 sibling group 可以被多个 lane 检查；重复发现应保留到汇审归并阶段再去重。
+- `recommended_fix` 只是修改意见，不是最终补丁。最终修改只能由主 agent 在汇审归并后执行。
+- 如果环境无法真正并行启动 subagent，主 agent 可以顺序启动多个独立 subagent，但必须保持输入隔离、输出独立，并按汇审归并规则处理。
+
+## 汇审归并规则
+
+主 agent 在修改任何文件前必须执行汇审归并：
+
+1. 收集所有 lane 输出，按 `file_path + sibling_group + check_id + ambiguous_signals` 建立 issue ledger。
+2. 合并重复问题，保留所有 lane 的证据来源；若多个 lane 给出不同原因或修复建议，全部进入同一 issue 的 `evidence_sources`。
+3. 按严重度排序：R6 路径无效、R1/R9 `fatal`、R5/R10 多意图吞并、R3/R8 fallback 吞并、R2/R4 信号不足、R7 回归用例失败。
+4. 解决修复意见冲突：优先选择能同时满足更多 R1-R10 检查、最少改变 tree 结构、保留所有明确 route paths、不会扩大 fallback 的方案。
+5. 形成统一修改计划，逐文件合并改动，避免同一 routing table 被不同建议反复覆盖。
+6. 主 agent 执行修改后，必须重新启动独立只读 lane 复验。复验可只覆盖失败项及其相邻 sibling group；若修复影响 ROOT 或多意图规则，则必须同时复验 R5、R7 和 R10。
+
+汇审归并不得把某一路的 `pass` 当成整体通过；只有所有 lane 的相关检查均为 pass，且归并后的 issue ledger 中没有未处理失败项，Routing Refinement 才能通过。
 
 ## 执行顺序
 
 1. 主 agent 确认 tree 根目录和 tree 类型：`single` 或 `multi`。
-2. 主 agent 启动新的 general-purpose subagent，传入本文件和 tree 根目录。
-3. subagent 扫描每一层的每一个 routing node：`ROOT.md` 和所有 `ROUTER.md`。如果 `shared/**/SKILL.md` 或 `cross-cutting/SKILL.md` 内包含显式 markdown routing table，也纳入 routing table inventory。
-4. subagent 对每个 routing table 将同表 rows 视为 sibling group，比较判断条件、关键词信号、上下文规则和 fallback。
-5. subagent 执行 R1-R10，并返回结构化 pass/fail。
-6. 如果有失败项，主 agent 修复相关路由表和报告证据。
-7. 主 agent 启动新的 subagent 复验失败项及其相邻 sibling group。
-8. 所有 R1-R10 通过后，主 agent 将 refinement 结果写入或更新 `GENERATION-REPORT.md` 的 Routing Refinement section。该 section 独立于 validation section；最终完成声明必须同时具备 validation 和 refinement 两部分通过证据。
+2. 主 agent 根据“多路并行原则”启动多个新的 general-purpose subagent，分别传入本文件、tree 根目录、`lane_id` 和该 lane 的 `check_scope`。
+3. 每个 subagent 扫描自己检查范围需要的 routing node：`ROOT.md` 和所有 `ROUTER.md`。如果 `shared/**/SKILL.md` 或 `cross-cutting/SKILL.md` 内包含显式 markdown routing table，也纳入 routing table inventory。
+4. 每个 subagent 对相关 routing table 将同表 rows 视为 sibling group，比较判断条件、关键词信号、上下文规则和 fallback。
+5. 每个 subagent 只执行自己 `check_scope` 内的 R 项，并返回结构化 pass/fail、证据和 recommended_fix；R7 lane 必须返回 regression prompt matrix。
+6. 主 agent 等待所有 lane 返回，通过“汇审归并规则”建立 issue ledger、去重、解决冲突并形成统一修改计划。
+7. 如果有失败项，主 agent 根据汇审归并后的统一计划修复相关路由表和报告证据。
+8. 主 agent 启动新的只读 lane 复验失败项及其相邻 sibling group；复验仍必须独立返回意见，并再次经过汇审归并确认。
+9. 所有 R1-R10 通过后，主 agent 将 refinement 结果写入或更新 `GENERATION-REPORT.md` 的 Routing Refinement section。该 section 独立于 validation section；最终完成声明必须同时具备 validation 和 refinement 两部分通过证据，并记录并行 lane 和汇审归并摘要。
 
 ## 完成声明约束
 
-- 主 agent 必须等待 Routing Refinement subagent 返回结果，并完成所有失败项修复和复验后，才可声明 Routing Refinement 通过。
-- 在 refinement subagent 仍在运行、失败项尚未修复、或复验尚未通过时，不得输出 `The unified skill tree has been generated successfully`、`generated successfully` 或等价最终成功总结。
+- 主 agent 必须等待所有 Routing Refinement lane 返回结果，并完成汇审归并、所有失败项修复和复验后，才可声明 Routing Refinement 通过。
+- 在任何 refinement lane 仍在运行、汇审归并尚未完成、失败项尚未修复、或复验尚未通过时，不得输出 `The unified skill tree has been generated successfully`、`generated successfully` 或等价最终成功总结。
 - 等待期间只能输出中间状态，例如：`Skill tree files have been generated; validation passed; waiting for Routing Refinement results.`
-- 最终成功总结只能在 validation section 和 Routing Refinement section 都已写入 `GENERATION-REPORT.md` 且均为通过状态后输出。
+- 最终成功总结只能在 validation section 和 Routing Refinement section 都已写入 `GENERATION-REPORT.md` 且均为通过状态后输出；Routing Refinement section 必须包含 lane 结果摘要、归并 issue ledger 摘要和复验证据。
 
 ## Subagent Prompt
 
-启动 general-purpose subagent 时，prompt 必须包含：
+启动每个 general-purpose subagent 时，prompt 必须包含：
 
 ```text
-你只执行 Routing Refinement Stage，tree-only/read-only。
-输入：tree 根目录路径、tree 类型（single 或 multi）、routing_refinement.md 中 R1-R10。
+你只执行 Routing Refinement Stage 的一个独立并行检查路径，tree-only/read-only。
+输入：tree 根目录路径、tree 类型（single 或 multi）、lane_id、check_scope、routing_refinement.md 中与你 check_scope 对应的 R 项。
 只读取 tree 目录下的 ROOT.md、ROUTER.md、SKILL.md、SKILL-TREE.md 和本检查定义。
 不要读取源 skill、源 skill 引用文件、AGENTS.md 或 CLAUDE.md。
 不要修改任何文件。
+不要依赖其他 subagent 的结论；你的输出是独立意见，最终修改由主 agent 汇审归并后执行。
 必须扫描每一层的每一个 routing node：ROOT.md 和所有 ROUTER.md。若 shared/**/SKILL.md 或 cross-cutting/SKILL.md 内包含显式 markdown routing table，也纳入 routing table inventory。
 对每个 routing table，将同表 rows 视为 sibling group，并比较它们的判断条件、关键词信号、上下文规则和 fallback。
 Multi-Skill 树中的 shared/ 和 cross-cutting/ 只有在包含显式路由表时才作为 sibling group 检查；否则仅用于多意图路径和目标路径验证。
-逐项返回 pass/fail。失败项使用结构化格式：check_id、status、file_path、sibling_group、ambiguous_signals、reason、recommended_fix。
-R7 必须额外返回 regression prompt matrix：prompt、expected_route_path、actual_or_manual_trace、status。
+只逐项返回 check_scope 内的 pass/fail。失败项使用结构化格式：lane_id、check_id、status、severity、file_path、sibling_group、ambiguous_signals、reason、recommended_fix、evidence。
+R7 lane 必须额外返回 regression prompt matrix：prompt、expected_route_path、actual_or_manual_trace、status。
 ```
 
 ## R1: Sibling Mutual Exclusivity
@@ -176,14 +210,14 @@ Single-Skill 是否支持多 leaf 并行，由 tree 内证据判断：`ROOT.md` 
 
 ## 输出格式
 
-subagent 必须返回：
+每个 subagent lane 必须返回：
 
 ```markdown
 ## Routing Refinement Result
 
-| check_id | status | file_path | sibling_group | ambiguous_signals | reason | recommended_fix |
-|----------|--------|-----------|---------------|-------------------|--------|-----------------|
-| R1 | pass/fail | ROOT.md | row labels / targets | create, 新建 | ... | ... |
+| lane_id | check_id | status | severity | file_path | sibling_group | ambiguous_signals | reason | recommended_fix | evidence |
+|---------|----------|--------|----------|-----------|---------------|-------------------|--------|-----------------|----------|
+| lane-a-disambiguation | R1 | pass/fail | fatal/degraded/warning/none | ROOT.md | row labels / targets | create, 新建 | ... | ... | ... |
 
 ## Regression Prompt Matrix
 
@@ -192,6 +226,16 @@ subagent 必须返回：
 | ... | ROOT.md -> module/ROUTER.md -> leaf/SKILL.md | ROOT row ... -> ROUTER row ... | pass/fail |
 ```
 
+主 agent 汇审归并后必须在 `GENERATION-REPORT.md` 的 Routing Refinement section 记录：
+
+```markdown
+## Routing Refinement Consolidation Review
+
+| issue_id | source_lanes | status | severity | file_path | sibling_group | merged_reason | merged_fix |
+|----------|--------------|--------|----------|-----------|---------------|---------------|------------|
+| RR-001 | lane-a-disambiguation, lane-c-path-regression | fixed/pass | fatal | ROOT.md | ... | ... | ... |
+```
+
 ## 总通过标准
 
-R1-R10 全部通过；每个 sibling group 都能用唯一信号、上下文优先级、显式消歧或询问用户策略稳定地区分；fallback 不静默吞掉模糊请求；多意图与跨 domain workflow 的依赖边界清晰可追踪。
+R1-R10 全部通过；每个 lane 均返回通过状态；归并后的 issue ledger 中没有未处理失败项；每个 sibling group 都能用唯一信号、上下文优先级、显式消歧或询问用户策略稳定地区分；fallback 不静默吞掉模糊请求；多意图与跨 domain workflow 的依赖边界清晰可追踪。
