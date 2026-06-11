@@ -8,6 +8,14 @@
 
 确认项目根目录有对应 agent 的记忆文件，且包含 skill-tree 路由协议。
 
+**重要权限规则**：如果当前 skill-tree 生成/验证是在子 agent、隔离环境、受限 worktree 或任何无法修改项目根记忆文件的执行环境中运行，**不要尝试绕过权限修改记忆文件**。此时 Check 1 改为：
+1. 检查目标记忆文件当前状态；
+2. 如果缺少路由协议，在验证报告中输出“主 agent 需要追加的精确内容”和目标文件路径；
+3. 将 Check 1 标记为 `PENDING_PARENT_APPLY`，而不是验证失败；
+4. 由主 agent / 调用方在有权限的环境中追加内容后，重新执行 Check 1 确认通过。
+
+换言之：**子 agent 负责生成和报告，主 agent 负责安装到记忆文件**。
+
 **目标文件**（按当前 agent 选择）：
 
 | Agent       | 记忆文件     | Skill 目录                              |
@@ -38,6 +46,14 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 ```
 
 **通过标准**：目标记忆文件已存在且包含 `# CRITICAL — DO NOT SKIP` 路由协议，或已成功追加。
+
+**受限环境通过标准**：如果当前执行环境无权修改目标记忆文件，验证报告必须包含：
+- 目标文件路径；
+- 缺失原因；
+- 需要追加的完整 markdown 内容；
+- 状态 `PENDING_PARENT_APPLY`。
+
+该状态表示生成物本身可继续验证，但最终交付前必须由主 agent 应用并复查。
 
 **同仓库同时服务两种 agent 的推荐做法**：
 - skill 统一放到 `.agent/skills/`
