@@ -160,3 +160,16 @@ components with hooks. Use when the user requests React-specific development.
 7.  **No Stub Patterns**: Do NOT use patterns like "Read the skill at {path}", "See {file} for details", or "Full Instructions: Read {path}" when `{path}` points outside the generated tree. Every instruction must be directly in the leaf unless Step R2 explicitly copied a large file set into the tree and the leaf uses a tree-internal relative path.
 8.  **Fallback on Missing Source**: If the source skill content cannot be found, do NOT generate a stub. Either abort with an error listing missing skills, or generate a meaningful fallback with `[AUTO-GENERATED FALLBACK - NO SOURCE SKILL]` marker.
 9.  **No External Reference Index Sections**: Do NOT include "参考文档索引" or "Reference Documents" sections that list file paths to external reference materials. If the source skill has such sections, either: (a) inline the referenced content directly into the leaf, (b) copy large referenced file sets into the tree and update paths to tree-internal relative paths, or (c) delete the section if the referenced files don't exist. The generated tree should contain all needed information directly, either in the leaf or in tree-internal copied references.
+10. **Pre-Write Content Completeness Check [MANDATORY]**: Before writing each leaf SKILL.md, re-read the source skill file. Handling differs by leaf type:
+
+   **独立叶节点（源 skill 不拆分子节点，1 个源 → 1 个叶）**:
+   - 除 YAML frontmatter 外，源 skill 的**所有内容必须完整迁入叶节点**，逐字保留
+   - 不需要 30% 阈值——独立叶节点不接受任何内容损失，哪怕少 5% 也是错误
+   - 禁止"简化"、"概括"、"提取核心"、"保留框架"：每个代码块、每个表格、每个检查清单、每个约束条件、每个格式化规则都必须逐字出现在叶节点中
+   - 验证方式：生成后行数应等于（源 skill 行数 - frontmatter 行数 + 叶节点头部新增行数）
+
+   **拆分型叶节点（1 个源 skill 拆分为多个子叶节点）**:
+   - 源 skill 内容按能力分配到各子叶节点
+   - 每个子叶节点包含源 skill 中对应能力的完整内容（不精简）
+   - 所有子叶节点的内容总和必须覆盖源 skill 的全部章节
+   - 如果某个子叶节点内容少于预期，使用 30% 阈值检查是否意外截断

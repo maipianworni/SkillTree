@@ -109,6 +109,11 @@ For each leaf node, read `references/leaf_template.md` for the structure templat
 
 **自包含**: 遵循 `references/error_handling.md` 中的 **Self-Containment Rule**，生成结果必须作为 skill tree 整体自包含；短引用内联到叶节点，大文件集可拷贝到 tree 内并通过 tree 内部相对路径引用。
 
+**【强制】Pre-Write Content Completeness Check**: 在 Write 每个叶节点之前，**重新读取源 skill 文件**。按叶节点类型分别执行：
+
+- **独立叶节点（源 skill 不拆分，1 源 → 1 叶）**：除 YAML frontmatter 外，源 skill 的全部内容必须逐字迁入叶节点；不接受内容损失；禁止"简化"、"概括"、"保留框架"。若因标题替换、tree 内部路径替换、引用文件拷贝等自包含处理导致行数不同，必须在 `GENERATION-REPORT.md` 中逐项解释差异，并确认无执行级内容丢失。
+- **拆分型叶节点（1 源 → 多个子叶）**：先建立 source section → leaf mapping；每个子叶包含对应章节/能力的完整内容；所有子叶合计覆盖源 skill 全部章节；若某子叶比映射到它的源段落短 >30%，必须逐段排查并修复或解释。
+
 ### Mode 1 Step 6: Create Output Structure
 
 Create all files in the target directory. **Small files (≤10KB) use Write tool; large file sets (>5 files or >50KB) use staging + platform-native copy (`cp -a` on Unix/macOS, `robocopy` on Windows; `xcopy /E /I` only as last fallback) — never copy large directories file-by-file with Write. Treat `robocopy` return codes `< 8` as success.**
@@ -205,6 +210,17 @@ Classify every capability group:
 1. **前置检查**: Step A 已确认源技能存在 → 直接提取完整内容。如局部内容缺失 → 按 Degraded 级别生成 `[AUTO-GENERATED FALLBACK]` 回退
 2. **引用文件处理**: 执行 Step R1-R4。Multi-Skill 场景下多个源技能的引用文件需统一处理。大文件集（>5 files / >50KB）使用 staging + 平台原生命令拷贝，禁止 Write 逐文件写入
 3. **自包含**: 遵循 Self-Containment Rule，生成后的 skill tree 完全独立于源技能；短引用内联，大文件集可使用 tree 内部相对路径引用
+4. **【强制】Pre-Write Content Completeness Check**: 在 Write 每个叶节点之前，**重新读取源 skill 文件**。按叶节点类型分别执行：
+
+   **独立叶节点（源 skill 不拆分，1 源 → 1 叶）**：
+   - 除 YAML frontmatter 外，源 skill 的全部内容必须逐字迁入叶节点
+   - **不接受任何内容损失**：行数应等于（源 skill − frontmatter + 叶节点新增头部）
+   - 禁止"简化"、"概括"、"保留框架"——每个代码块、表格、清单、约束、格式化规则全部逐字保留
+
+   **拆分型叶节点（1 源 → 多个子叶）**：
+   - 每个子叶包含对应能力的完整内容
+   - 所有子叶的内容总和必须覆盖源 skill 全部章节
+   - 若某子叶偏移量异常（单叶比预期源子段短 >30%），逐段排查
 
 ### Mode 2 Step D: Multi-Skill ROOT.md Generation
 

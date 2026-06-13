@@ -20,6 +20,7 @@ Every generated or updated tree must include `GENERATION-REPORT.md`. Do not clai
 - source skill inventory and non-empty SKILL.md checks
 - tree design/topology decision: Mode 1 module design, Mode 2 capability matrix plus shared/unique classification and overlap_rate, or Mode 3 branch decision and update plan
 - leaf decomposition and single-leaf justifications
+- per-leaf content preservation evidence: source skill path, leaf type (`independent` or `split`), source body/mapped line counts, target line counts, section mapping for split leaves, and explanations for every line-count difference
 - reference handling decisions
 - validation results for every applicable `validation_template.md` check
 

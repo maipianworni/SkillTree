@@ -170,13 +170,32 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 - 确认源 skill 中的所有内容在叶节点中都有保留
 - 源 skill 中的指令在拆分过程中没有丢失
+- 为每个叶节点记录可审计的内容保留证据，避免仅凭印象判断
 
 **操作步骤**:
-1. 读取每个源 skill 的完整内容
-2. 确认每段指令/公式/代码都出现在对应的叶节点中
-3. 特别注意数值、阈值、具体实现细节
+1. 读取每个源 skill 的完整内容，并记录总行数、YAML frontmatter 行数、正文行数
+2. 为每个叶节点标注类型：
+   - `independent`：1 个源 skill → 1 个叶节点
+   - `split`：1 个源 skill → 多个子叶节点
+3. 对 `independent` 叶节点：
+   - 重新读取源 skill 后再读取目标叶节点
+   - 除 YAML frontmatter 外，源 skill 正文必须完整出现在目标叶节点中
+   - 比较源正文行数与目标叶节点行数；若因 `[LEAF NODE]` 标题、tree 内部路径替换、引用文件拷贝等自包含处理导致行数不同，逐项记录差异原因
+   - 任意未解释的内容缺失均为失败
+4. 对 `split` 叶节点：
+   - 先建立 source section → leaf mapping table，列出源 skill 每个章节分配到哪个叶节点
+   - 确认每个源章节都映射到至少一个叶节点
+   - 确认每个叶节点包含映射给它的章节/能力的完整内容，不得概括或只保留框架
+   - 若某叶节点正文行数比映射到它的源段落短 >30%，逐段排查；除非有明确、可审计的非内容损失原因，否则标记失败
+5. 特别注意数值、阈值、具体实现细节、代码块、表格、检查清单、格式化规则
+6. 将 per-leaf content preservation table 写入 `GENERATION-REPORT.md`：
 
-**通过标准**: 源 skill 的所有执行级指令完整迁移到叶节点。
+```markdown
+| Leaf | Source skill | Type | Source body lines / mapped lines | Target lines | Difference explanation | Status |
+|------|--------------|------|----------------------------------|--------------|------------------------|--------|
+```
+
+**通过标准**: 源 skill 的所有执行级指令和章节内容完整迁移到叶节点；每个叶节点都有行数/映射证据；任何行数差异都有明确解释且不代表内容丢失。
 
 ---
 
