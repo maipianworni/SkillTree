@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 340" width="1280" height="340" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-label="Skill Tree Generator — load only the skill you need, not the whole catalog">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1117"/>
+      <stop offset="0.55" stop-color="#11161f"/>
+      <stop offset="1" stop-color="#161b22"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#2ea043" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#2ea043" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="leafActive" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2ea043"/>
+      <stop offset="1" stop-color="#1a7f37"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background -->
+  <rect width="1280" height="340" fill="url(#bg)"/>
+  <rect width="1280" height="340" fill="none"/>
+  <ellipse cx="1010" cy="170" rx="320" ry="220" fill="url(#glow)"/>
+
+  <!-- ===== left: wordmark ===== -->
+  <text x="72" y="96" fill="#3fb950" font-size="17" font-weight="700" letter-spacing="3.5">ROUTING TREES FOR AI-AGENT SKILLS</text>
+  <text x="70" y="178" fill="#f0f6fc" font-size="66" font-weight="800" letter-spacing="-1">Skill Tree</text>
+  <text x="70" y="248" fill="#f0f6fc" font-size="66" font-weight="800" letter-spacing="-1">Generator</text>
+  <text x="74" y="296" fill="#8b949e" font-size="22" font-weight="400">Load only the skill you need — not the whole catalog.</text>
+
+  <!-- ===== right: routing tree ===== -->
+  <g stroke-linecap="round" fill="none">
+    <!-- inactive edges -->
+    <path d="M885,170 C950,170 960,235 1005,235" stroke="#30363d" stroke-width="3"/>
+    <path d="M1035,105 C1075,105 1080,75 1112,75" stroke="#30363d" stroke-width="3"/>
+    <path d="M1035,235 C1075,235 1080,205 1112,205" stroke="#30363d" stroke-width="3"/>
+    <path d="M1035,235 C1075,235 1080,266 1112,266" stroke="#30363d" stroke-width="3"/>
+    <!-- ACTIVE routed path: ROOT -> ROUTER -> highlighted leaf -->
+    <path d="M885,170 C950,170 960,105 1005,105" stroke="#2ea043" stroke-width="4"/>
+    <path d="M1035,105 C1075,105 1080,135 1112,135" stroke="#2ea043" stroke-width="4"/>
+  </g>
+
+  <!-- ROOT node -->
+  <circle cx="860" cy="170" r="27" fill="#21262d" stroke="#2ea043" stroke-width="2.5"/>
+  <text x="860" y="174" fill="#e6edf3" font-size="13" font-weight="700" text-anchor="middle">ROOT</text>
+
+  <!-- ROUTER nodes -->
+  <circle cx="1020" cy="105" r="22" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+  <text x="1020" y="109" fill="#adbac7" font-size="10.5" font-weight="600" text-anchor="middle">RTR</text>
+  <circle cx="1020" cy="235" r="22" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+  <text x="1020" y="239" fill="#768390" font-size="10.5" font-weight="600" text-anchor="middle">RTR</text>
+
+  <!-- leaf nodes -->
+  <g font-size="12" text-anchor="middle">
+    <rect x="1114" y="60" width="74" height="30" rx="8" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+    <text x="1151" y="79" fill="#768390">🍃</text>
+
+    <!-- ACTIVE leaf (loaded on demand) -->
+    <rect x="1110" y="118" width="82" height="34" rx="9" fill="url(#leafActive)" stroke="#3fb950" stroke-width="2"/>
+    <text x="1151" y="139" fill="#ffffff" font-weight="700">🍃 leaf</text>
+
+    <rect x="1114" y="190" width="74" height="30" rx="8" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+    <text x="1151" y="209" fill="#768390">🍃</text>
+    <rect x="1114" y="251" width="74" height="30" rx="8" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+    <text x="1151" y="270" fill="#768390">🍃</text>
+  </g>
+
+  <text x="1151" y="172" fill="#3fb950" font-size="11.5" font-weight="600" text-anchor="middle">loaded on demand</text>
+</svg>
