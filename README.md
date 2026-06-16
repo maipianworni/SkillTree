@@ -4,10 +4,11 @@
 
 # Skill Tree Generator
 
-**Your agent doesn't need every skill in context — just the right one.**
+**Your agent doesn't need every skill in context — just the ones it needs.**
 
 Turn a flat pile of agent skills into a hierarchical **routing tree** your AI agent
-walks on demand, loading only the leaf it actually needs.
+walks on demand, loading only the leaves it actually needs — one for a focused task,
+several in parallel when the prompt spans intents.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Status: Research Preview](https://img.shields.io/badge/status-research%20preview-orange.svg)](#-status)
@@ -48,7 +49,7 @@ BEFORE — flat skills, all loaded every turn
 
 **Skill Tree Generator** restructures your skills into a tree of tiny routing files
 (`ROOT.md → ROUTER.md → leaf SKILL.md`). The agent reads a small routing table first,
-narrows down branch by branch, and **only loads the one leaf it needs**.
+narrows down branch by branch, and **loads only the leaves it needs** — never the whole catalog.
 
 ```text
 AFTER — a routing tree, leaves loaded on demand
@@ -56,7 +57,7 @@ AFTER — a routing tree, leaves loaded on demand
 ├── ROOT.md             ◀── agent reads this first (a tiny routing table)
 │      └─ narrows to one branch…
 ├── web-dev/ROUTER.md   ◀── …then one sub-branch…
-│      └─ frontend/SKILL.md   ◀── ✅ only this leaf is loaded
+│      └─ frontend/SKILL.md   ◀── ✅ this leaf is loaded on demand
 └── data-pipeline/ROUTER.md
 ```
 
@@ -65,18 +66,20 @@ AFTER — a routing tree, leaves loaded on demand
 ## 🌳 How it works
 
 The agent follows a routing protocol before answering: read `ROOT.md`, match the intent,
-descend through `ROUTER.md` files, stop at the `[LEAF NODE]` it needs, and execute that —
-and only that.
+descend through `ROUTER.md` files, stop at the `[LEAF NODE]`(s) it needs, and execute those —
+and only those. A focused prompt lands on a single leaf; a multi-intent or cross-domain prompt
+**fans out to every matched leaf** and reads them in parallel — you're never locked to one branch.
 
 ```mermaid
 flowchart TD
-    P["💬 User prompt"] --> ROOT["ROOT.md<br/>L1 routing table"]
+    P["💬 User prompt<br/>(single- or multi-intent)"] --> ROOT["ROOT.md<br/>L1 routing table"]
     ROOT -->|frontend signals| R1["web-dev/ROUTER.md<br/>L2 routing"]
     ROOT -->|data signals| R2["data/ROUTER.md"]
     R1 -->|match| L1["frontend/SKILL.md<br/>🍃 leaf · loaded on demand"]
     R1 --> L2["styling/SKILL.md 🍃"]
-    R2 --> L3["etl/SKILL.md 🍃"]
+    R2 -->|match| L3["etl/SKILL.md<br/>🍃 also fires when intent spans both"]
     style L1 fill:#1f883d,color:#fff
+    style L3 fill:#1f883d,color:#fff
 ```
 
 It works in **three modes**:
@@ -186,7 +189,8 @@ my-tree/
 
 - 🌱 **Three modes** — generate from one skill, aggregate many, or update a tree in place
 - 🔌 **Multi-agent** — Claude Code, Codex CLI, OpenCode, OpenClaw, Bitfun, Hermes & any `AGENTS.md` reader
-- 🍃 **Load on demand** — only the matched leaf enters context, not the whole catalog
+- 🍃 **Load on demand** — only the matched leaves enter context, never the whole catalog
+- 🪢 **Multi-leaf routing** — a multi-intent prompt fans out to every matched leaf in parallel; you're never locked to a single branch
 - 🧩 **Shared-capability dedup** — overlapping abilities across skills collapse into one shared leaf
 - 🔗 **Cross-cutting workflows** — multi-skill pipelines are first-class, not afterthoughts
 - 📦 **Self-contained leaves** — no dangling external references; every leaf stands alone
