@@ -4,10 +4,10 @@
 
 # Skill Tree Generator
 
-**别再把所有 skill 一股脑塞进上下文 —— agent 只需要其中那一个。**
+**别再把所有 skill 一股脑塞进上下文 —— agent 只需要其中用得上的那些。**
 
 把庞杂的 agent skills 重构成分层 **路由树**，让 AI agent 按需逐层下钻，
-只加载它真正需要的那个叶子节点。
+只加载它真正需要的那些叶子节点 —— 单一任务命中一个，跨意图时并行命中多个。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Status: Research Preview](https://img.shields.io/badge/status-research%20preview-orange.svg)](#-状态)
@@ -48,7 +48,7 @@ Skill 很好用 —— 直到你的 skill 多起来。agent 能看到的每个 `
 
 **Skill Tree Generator** 把你的 skills 重构成一棵由微型路由文件组成的树
 （`ROOT.md → ROUTER.md → 叶子 SKILL.md`）。agent 先读一张很小的路由表，
-一层层收窄，**只加载它需要的那一个叶子**。
+一层层收窄，**只加载它需要的那些叶子** —— 而不是整个目录。
 
 ```text
 之后 —— 一棵路由树，叶子按需加载
@@ -56,7 +56,7 @@ Skill 很好用 —— 直到你的 skill 多起来。agent 能看到的每个 `
 ├── ROOT.md             ◀── agent 先读这个（一张很小的路由表）
 │      └─ 收窄到一个分支…
 ├── web-dev/ROUTER.md   ◀── …再到一个子分支…
-│      └─ frontend/SKILL.md   ◀── ✅ 只加载这一个叶子
+│      └─ frontend/SKILL.md   ◀── ✅ 这个叶子按需加载
 └── data-pipeline/ROUTER.md
 ```
 
@@ -65,17 +65,19 @@ Skill 很好用 —— 直到你的 skill 多起来。agent 能看到的每个 `
 ## 🌳 工作原理
 
 agent 在回答之前先执行路由协议：读 `ROOT.md`，匹配意图，沿着 `ROUTER.md` 逐层下钻，
-停在它需要的 `[LEAF NODE]` 节点，然后只执行那一个。
+停在它需要的 `[LEAF NODE]` 节点并执行 —— 单意图 prompt 命中一个叶子；
+多意图或跨域 prompt 会**扇出到每一个命中的叶子并并行读取**，绝不会被锁死在单个分支上。
 
 ```mermaid
 flowchart TD
-    P["💬 用户 prompt"] --> ROOT["ROOT.md<br/>L1 路由表"]
+    P["💬 用户 prompt<br/>(单意图 / 多意图)"] --> ROOT["ROOT.md<br/>L1 路由表"]
     ROOT -->|前端信号| R1["web-dev/ROUTER.md<br/>L2 路由"]
     ROOT -->|数据信号| R2["data/ROUTER.md"]
     R1 -->|命中| L1["frontend/SKILL.md<br/>🍃 叶子 · 按需加载"]
     R1 --> L2["styling/SKILL.md 🍃"]
-    R2 --> L3["etl/SKILL.md 🍃"]
+    R2 -->|命中| L3["etl/SKILL.md<br/>🍃 意图跨两域时一并加载"]
     style L1 fill:#1f883d,color:#fff
+    style L3 fill:#1f883d,color:#fff
 ```
 
 它有 **三种模式**：
@@ -185,7 +187,8 @@ my-tree/
 
 - 🌱 **三种模式** —— 单 skill 生成、多 skill 聚合、原地更新
 - 🔌 **多 agent** —— Claude Code、Codex CLI、OpenCode、OpenClaw、Bitfun、Hermes 及任何 `AGENTS.md` 读取者
-- 🍃 **按需加载** —— 只有命中的叶子进入上下文，而不是整个目录
+- 🍃 **按需加载** —— 只有命中的叶子进入上下文，绝不是整个目录
+- 🪢 **多叶路由** —— 多意图 prompt 会并行扇出到每一个命中的叶子，绝不被锁死在单个分支
 - 🧩 **共享能力去重** —— 跨 skill 的重叠能力合并成一个共享叶子
 - 🔗 **跨域工作流** —— 多 skill 流水线是一等公民，而非事后补丁
 - 📦 **自包含叶子** —— 不留外部引用悬空；每个叶子都能独立成立
