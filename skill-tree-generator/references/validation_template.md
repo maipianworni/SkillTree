@@ -26,6 +26,7 @@
 | Hermes      | `AGENTS.md` | `.hermes/skills/`                       |
 | OpenClaw    | `AGENTS.md` | `.openclaw/skills/`                     |
 | OpenCode    | `AGENTS.md` | `.opencode/skills/`                     |
+| ZCode       | `AGENTS.md`  | `.zcode/skills/`                       |
 | 其他支持 AGENTS.md 的 agent（Cursor / Aider / Jules 等） | `AGENTS.md` | 同上 |
 
 操作：检查目标记忆文件是否已包含 `# CRITICAL — DO NOT SKIP` 和 `## Routing Protocol` 路由协议内容。
@@ -55,7 +56,7 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 该状态表示生成物本身可继续验证，但最终交付前必须由主 agent 应用并复查。
 
-**同仓库同时服务两种 agent 的推荐做法**：
+**同仓库同时服务多种 agent 的推荐做法**：
 - skill 统一放到 `.agent/skills/`
 - 用软链让 Claude Code 也能发现：`ln -s .agent/skills .claude/skills`
 - 用软链共用同一份协议：`ln -s AGENTS.md CLAUDE.md`

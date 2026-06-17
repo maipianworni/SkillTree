@@ -122,6 +122,8 @@ Create all files in the target directory. **Small files (≤10KB) use Write tool
 .claude/skills/{skill-name}-tree/     # Claude Code
 # or
 .agent/skills/{skill-name}-tree/      # Codex CLI / other AGENTS.md-aware agents
+# or
+.zcode/skills/{skill-name}-tree/      # ZCode
 ├── ROOT.md
 ├── SKILL-TREE.md              # Directory structure overview
 ├── GENERATION-REPORT.md       # Required evidence (see Strict Conformance)
@@ -257,6 +259,7 @@ Example:
 /skill-tree-generator --update {skills-dir}/coding-tree --add angular
 # e.g. Claude Code:  /skill-tree-generator --update .claude/skills/coding-tree --add angular
 # e.g. Codex CLI:    /skill-tree-generator --update .agent/skills/coding-tree --add angular
+# e.g. ZCode:        /skill-tree-generator --update .zcode/skills/coding-tree --add angular
 ```
 
 ### Mode 3 Step A: Detect Single-Skill or Multi-Skill

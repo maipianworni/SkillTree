@@ -4,7 +4,7 @@
 # Run this script first, then the target agent will use the output to invoke skill-tree-generator.
 #
 # Usage:
-#   ./scripts/aggregate-skills.sh <skill-directory> [--domain <domain-name>] [--agent claude|codex|opencode|bitfun|openclaw|hermes]
+#   ./scripts/aggregate-skills.sh <skill-directory> [--domain <domain-name>] [--agent claude|codex|opencode|bitfun|openclaw|hermes|zcode]
 #
 # Examples:
 #   ./scripts/aggregate-skills.sh .claude/skills
@@ -13,11 +13,12 @@
 #   ./scripts/aggregate-skills.sh .bitfun/skills --agent bitfun
 #   ./scripts/aggregate-skills.sh .openclaw/skills --agent openclaw
 #   ./scripts/aggregate-skills.sh .hermes/skills --agent hermes
+#   ./scripts/aggregate-skills.sh .zcode/skills --agent zcode
 #   ./scripts/aggregate-skills.sh tasks/my-project/environment/skills --domain data-processing --agent codex
 
 set -euo pipefail
 
-SKILL_DIR="${1:?Usage: $0 <skill-directory> [--domain <domain-name>] [--agent claude|codex|opencode|bitfun|openclaw|hermes]}"
+SKILL_DIR="${1:?Usage: $0 <skill-directory> [--domain <domain-name>] [--agent claude|codex|opencode|bitfun|openclaw|hermes|zcode]}"
 shift
 
 DOMAIN=""
@@ -29,21 +30,21 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --agent)
-            AGENT="${2:?--agent requires a value (claude|codex|opencode|bitfun|openclaw)}"
+            AGENT="${2:?--agent requires a value (claude|codex|opencode|bitfun|openclaw|hermes|zcode)}"
             shift 2
             ;;
         *)
             echo "Unknown argument: $1" >&2
-            echo "Usage: $0 <skill-directory> [--domain <domain-name>] [--agent claude|codex|opencode|bitfun|openclaw|hermes]" >&2
+            echo "Usage: $0 <skill-directory> [--domain <domain-name>] [--agent claude|codex|opencode|bitfun|openclaw|hermes|zcode]" >&2
             exit 2
             ;;
     esac
 done
 
 case "$AGENT" in
-    claude|codex|opencode|bitfun|openclaw|hermes) ;;
+    claude|codex|opencode|bitfun|openclaw|hermes|zcode) ;;
     *)
-        echo "Unknown agent: $AGENT (use 'claude', 'codex', 'opencode', 'bitfun', 'openclaw', or 'hermes')" >&2
+        echo "Unknown agent: $AGENT (use 'claude', 'codex', 'opencode', 'bitfun', 'openclaw', 'hermes', or 'zcode')" >&2
         exit 2
         ;;
 esac
@@ -162,6 +163,15 @@ case "$AGENT" in
         echo "Output will be written to:"
         echo "  - $SKILL_DIR/{skill-name}-tree/"
         echo "  - <repo-root>/AGENTS.md  (appended if it already exists)"
+        ;;
+    zcode)
+        echo "In ZCode, run this slash command directly:"
+        echo ""
+        echo "  $CMD"
+        echo ""
+        echo "Output will be written to:"
+        echo "  - $SKILL_DIR/{skill-name}-tree/"
+        echo "  - <repo-root>/ZCODE.md  (appended if it already exists)"
         ;;
 esac
 echo ""

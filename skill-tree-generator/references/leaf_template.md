@@ -26,11 +26,11 @@ This template defines the structure for leaf node skill files.
 
 ### Example 1: {Example Title}
 **User Request**: {Example user prompt}
-**Action**: {What Claude should do}
+**Action**: {What the agent should do}
 
 ### Example 2: {Example Title}
 **User Request**: {Example user prompt}
-**Action**: {What Claude should do}
+**Action**: {What the agent should do}
 
 ## Constraints
 
@@ -64,14 +64,14 @@ One or two sentences explaining:
 
 ### 3. Workflow Steps
 
-Numbered steps that Claude should follow:
+Numbered steps that the agent should follow:
 - Each step should be actionable
 - Include specific tool references when applicable
 - Consider edge cases and error handling
 
 ### 4. Examples
 
-Concrete examples help Claude understand:
+Concrete examples help the agent understand:
 - What user requests trigger this skill
 - What actions to take
 - What output to produce

@@ -50,7 +50,7 @@ This template defines the root-level routing protocol for a skill-tree.
 | Placeholder | Description | Example |
 |-------------|-------------|---------|
 | `{Skill Name}` | Name of the skill-tree | `Web Development` |
-| `{skills-dir}` | Agent-specific skills directory | `.claude/skills` (Claude Code) / `.agent/skills` (Codex CLI) |
+| `{skills-dir}` | Agent-specific skills directory | `.claude/skills` (Claude Code) / `.agent/skills` (Codex CLI) / `.zcode/skills` (ZCode) |
 | `{categoryN}` | L1 category matching criteria | `前端/UI相关` |
 | `{skill-tree}` | Directory name of the skill-tree | `web-dev-tree` |
 | `{moduleN}` | Module directory name | `frontend` |
