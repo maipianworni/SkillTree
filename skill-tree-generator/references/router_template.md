@@ -69,6 +69,24 @@ This template defines the routing logic for non-leaf nodes in a skill-tree.
 - **Pattern**: `创建/新建/生成`
 - **Negation**: Avoid using; prefer positive conditions
 
+### Signal Adequacy for Generated Routers
+
+When generating a ROUTER.md from source skills, do not only copy the source skill names or internal implementation terms. Expand each row with signals extracted from the source skill and its examples:
+
+- **User-facing intent words**: verbs and nouns users are likely to say when requesting the capability.
+- **Artifacts and inputs**: file types, data types, services, platforms, resources, or objects the skill operates on.
+- **Expected outcomes**: deliverables, visible results, state changes, or success criteria produced by the skill.
+- **Implicit prerequisites**: supporting capabilities that are normally required to satisfy the outcome, even if users do not name them directly.
+- **Negative boundaries**: concise conditions that distinguish nearby sibling leaves when the source skill explicitly excludes a scenario.
+
+For prompts that imply several sibling capabilities, add a multi-match row that explicitly says to read every matched leaf instead of falling back to a generic handler.
+
+Template:
+
+```markdown
+| {end-to-end user outcome requiring capability A + capability B} | Read `./{capability-a}/SKILL.md` and Read `./{capability-b}/SKILL.md` |
+```
+
 ---
 
 ## Path References
@@ -123,3 +141,4 @@ The `{context_hint}` should guide the router to consider relevant conversation c
 3. **Specificity**: Order conditions from most specific to most general
 4. **Brevity**: Keep conditions concise but unambiguous
 5. **Context First**: Always mention conversation context priority
+6. **Multi-Match Preservation**: If one user request naturally requires multiple leaf capabilities, route to all of them; do not collapse to `其他/通用` just because no single leaf fully covers the task

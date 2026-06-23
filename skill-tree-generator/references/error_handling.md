@@ -15,6 +15,8 @@
 
 **Degraded 比例阈值**: 如果 Degraded 叶节点数量超过叶节点总数的 30%，在继续前发出警告，列出受影响节点让用户确认。
 
+**生成时 vs 运行时边界**: 源技能路径只允许作为生成时输入和 `GENERATION-REPORT.md` 审计记录。叶节点不得把源技能路径作为运行时执行步骤、"完整指令"入口或备用说明来源。生成后的 tree 必须能在源技能目录被删除、移动或不可访问时继续执行。
+
 ## Atomicity Guarantees
 
 - 在创建/修改 tree 目录结构之前，先完成所有内容生成（在内存或临时位置）
@@ -66,7 +68,7 @@
 | 中文参考段落 | `参考文档索引`、`参考资料`、`相关文档`、`扩展阅读` |
 | 英文参考段落 | `Reference Documents`、`References`、`See Also`、`Further Reading`、`Related Documents`、`External References` |
 | 外部指针短语 | `For more details, see`、`Additional resources`、`Refer to`、`See {path}`、`Read {path}`、`Full Instructions: Read`、`Read the skill at` |
-| tree 外部绝对路径 | `\.claude/skills/(?!.*-tree/)`（匹配 `.claude/skills/xxx/` 但不匹配 `.claude/skills/xxx-tree/`） |
+| tree 外部绝对路径 | `(\.claude|\.agent|\.openclaw)/skills/(?!.*-tree/)|~/.openclaw/workspace/skills/|~/core_skills/|~/openclaw/node_modules/openclaw/skills/`（匹配常见 agent 源 skill 目录，但不匹配 tree 内部相对路径） |
 
 **R3.2 Three-step handling per reference entry**：
 
@@ -81,7 +83,7 @@
 在完成叶节点生成后、进入输出结构创建或后续路由/报告步骤之前，**必须**执行以下检查（不必等到最终验证阶段）：
 
 1. **存根检测**: Grep 所有新生成的叶节点，确认不包含 Step R3.1 中列出的存根/外部指针模式
-2. **外部路径检测**: Grep 所有新生成的叶节点，确认不包含指向 tree 外部的绝对路径
+2. **外部路径检测**: Grep 所有新生成的叶节点，确认不包含指向 tree 外部的绝对路径、用户目录路径或 agent 源 skill 目录
 3. 如果命中 → 立即修复，修复后重新检测
 4. 只有通过后才继续后续步骤
 
@@ -97,4 +99,4 @@ skill tree 必须整体自包含，完全独立于源技能包和 tree 外部路
 - 可执行的工作流步骤、代码示例和使用模式
 - 原始技能中包含或引用的任何数据
 
-如果原始技能引用了外部文件，按 Step R2 决定内联或拷贝到 tree 内。短文件必须内联到对应叶节点中；大文件集可拷贝到 tree 内并使用 tree 内部相对路径引用。不得保留指向源技能包或其他 tree 外部位置的"见文件 X"类引用。
+如果原始技能引用了外部文件，按 Step R2 决定内联或拷贝到 tree 内。短文件必须内联到对应叶节点中；大文件集可拷贝到 tree 内并使用 tree 内部相对路径引用。不得保留指向源技能包或其他 tree 外部位置的"见文件 X"类引用，也不得出现"读取源 skill 获取完整指令"这类运行时依赖。
