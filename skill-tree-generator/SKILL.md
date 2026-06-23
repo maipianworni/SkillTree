@@ -105,6 +105,8 @@ For each non-leaf level, read `references/router_template.md` and generate `ROUT
 
 For each leaf node, read `references/leaf_template.md` for the structure template. Extract the complete content from the original skill and fill it into the template. Do NOT replace any content with a file path reference or external link. Every instruction, code example, API reference, and constraint from the original skill must be inlined directly.
 
+Source skill paths are generation-time inputs only. They may be recorded in `GENERATION-REPORT.md` for auditability, but leaf `SKILL.md` files must not tell the runtime agent to read the source skill path for full instructions. After generation, the tree must remain usable if the source skill directory is deleted or inaccessible.
+
 **引用处理**: 执行 `references/error_handling.md` 中的 **Reference File Processing Flow** Step R1-R4（盘点 → 决策 → 清理 → 即时验证）。
 
 **自包含**: 遵循 `references/error_handling.md` 中的 **Self-Containment Rule**，生成结果必须作为 skill tree 整体自包含；短引用内联到叶节点，大文件集可拷贝到 tree 内并通过 tree 内部相对路径引用。
@@ -209,7 +211,7 @@ Classify every capability group:
 
 1. **前置检查**: Step A 已确认源技能存在 → 直接提取完整内容。如局部内容缺失 → 按 Degraded 级别生成 `[AUTO-GENERATED FALLBACK]` 回退
 2. **引用文件处理**: 执行 Step R1-R4。Multi-Skill 场景下多个源技能的引用文件需统一处理。大文件集（>5 files / >50KB）使用 staging + 平台原生命令拷贝，禁止 Write 逐文件写入
-3. **自包含**: 遵循 Self-Containment Rule，生成后的 skill tree 完全独立于源技能；短引用内联，大文件集可使用 tree 内部相对路径引用
+3. **自包含**: 遵循 Self-Containment Rule，生成后的 skill tree 完全独立于源技能；短引用内联，大文件集可使用 tree 内部相对路径引用。源 skill 路径只能写入 `GENERATION-REPORT.md` 作为审计信息，不得写入叶节点作为运行时指令入口
 4. **【强制】Pre-Write Content Completeness Check**: 在 Write 每个叶节点之前，**重新读取源 skill 文件**。按叶节点类型分别执行：
 
    **独立叶节点（源 skill 不拆分，1 源 → 1 叶）**：

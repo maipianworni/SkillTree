@@ -199,17 +199,20 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 ---
 
-### Check 10: Source Skill Existence (源技能存在性)
+### Check 10: Source Content Capture (源内容采集与迁移)
 
-- 确认生成 tree 时引用的每个源 skill 都存在且内容非空
-- 防止生成指向不存在文件的存根
+- 确认生成 tree 时使用的每个源 skill 在**生成时**已读取且内容非空
+- 确认源 skill 的执行级内容已经迁移到 tree 内，而不是让 tree 在**运行时**依赖源 skill 路径
+- 防止把"源文件存在"误当成"tree 可独立执行"的通过证据
 
 **操作步骤**:
-1. 列出 tree 中所有叶节点对应的源技能路径
-2. 逐个确认源技能文件存在
-3. 确认源技能文件内容非空（至少包含有效的 SKILL.md 内容）
+1. 在 `GENERATION-REPORT.md` 中列出每个叶节点对应的源 skill 路径、读取时间/生成轮次、源正文行数、目标叶节点行数
+2. 对每个叶节点，确认源正文（除 YAML frontmatter 外）已按 Check 9 完整迁移：独立叶节点逐字保留，拆分叶节点按 section mapping 完整覆盖
+3. 确认叶节点中不包含要求 agent 再去读取源 skill 的运行时步骤，例如 `读取 ~/.openclaw/workspace/skills/.../SKILL.md 获取完整指令`
+4. 允许 `GENERATION-REPORT.md` 保留源路径作为审计记录；不允许叶节点用源路径作为执行依赖
+5. 生成后模拟删除或不可访问源 skill：只读取 tree 内文件，确认仍能执行每个叶节点的核心工作流
 
-**通过标准**: 所有源技能存在且内容非空。
+**通过标准**: 所有源 skill 在生成时已成功读取且内容非空；所有执行级内容已保存在 tree 内；删除源 skill 后 tree 不失效。
 
 ---
 
@@ -228,7 +231,7 @@ This applies to ALL tasks: research, code, editing, questions — everything.
    - 只包含标题+一行摘要+外部链接，无实质可执行内容
 3. 对命中存根的叶节点：必须将目标文件内容内联进来
 4. 如果目标文件不存在：**标记为验证失败**，需要手动补充内容
-5. 检查是否存在指向 tree 外部的路径引用（如 `.claude/skills/<source-skill>/`、绝对路径指向源技能目录）→ Grep pattern: `\.claude/skills/(?!.*-tree/)` 或类似的 tree 外部路径模式
+5. 检查是否存在指向 tree 外部的路径引用（如 `.claude/skills/<source-skill>/`、`.agent/skills/<source-skill>/`、`.openclaw/skills/<source-skill>/`、`~/.openclaw/workspace/skills/<source-skill>/`、`~/core_skills/<source-skill>/`、绝对路径指向源技能目录）→ Grep pattern: `(\.claude|\.agent|\.openclaw)/skills/(?!.*-tree/)|~/.openclaw/workspace/skills/|~/core_skills/|~/openclaw/node_modules/openclaw/skills/` 或类似的 tree 外部路径模式
 6. 检查是否存在未清理的"参考文档索引"/"Reference"/"References"段落，其中的文件路径指向 tree 外部或不存在的位置
 7. 对被引用的大文件目录（如 `docs/`），确认已拷贝到 tree 内且路径已替换为 tree 内部相对路径（如 `../docs/`）
 
