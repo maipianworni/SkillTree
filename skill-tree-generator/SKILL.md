@@ -91,13 +91,7 @@ Read `references/root_template.md` and generate `ROOT.md` following the Single-S
 
 ### Mode 1 Step 4: Generate ROUTER.md Files
 
-For each non-leaf level, read `references/router_template.md` and generate `ROUTER.md` following that template.
-
-**Routing Table Guidelines (supplement to template):**
-- Conditions should be mutually exclusive when possible
-- Use keyword matching, domain terminology, task patterns
-- Include "Other/Default" row for fallback
-- Reference context from conversation history
+For each non-leaf level, read `references/router_template.md` and generate `ROUTER.md` following that template. The template's `[MANDATORY]` routing requirements and pre-write checklist are acceptance criteria; do not duplicate, weaken, or replace them in this workflow.
 
 ### Mode 1 Step 5: Generate Leaf SKILL.md Files
 
@@ -109,7 +103,7 @@ Source skill paths are generation-time inputs only. They may be recorded in `GEN
 
 **引用处理**: 执行 `references/error_handling.md` 中的 **Reference File Processing Flow** Step R1-R4（盘点 → 决策 → 清理 → 即时验证）。
 
-**自包含**: 遵循 `references/error_handling.md` 中的 **Self-Containment Rule**，生成结果必须作为 skill tree 整体自包含；短引用内联到叶节点，大文件集可拷贝到 tree 内并通过 tree 内部相对路径引用。
+**自包含**: 遵循 `references/error_handling.md` 中的 **Self-Containment Rule**，生成结果必须作为 skill tree 整体自包含；短引用内联到叶节点，大文件集**必须**拷贝到 tree 内并通过 tree 内部相对路径引用。
 
 **【强制】Pre-Write Content Completeness Check**: 在 Write 每个叶节点之前，**重新读取源 skill 文件**。按叶节点类型分别执行：
 
@@ -207,21 +201,30 @@ Classify every capability group:
     └── SKILL.md                   # 跨 skill 工作流
 ```
 
+### Mode 2 Step C1: Generate Skill ROUTER.md Files
+
+For each skill subtree, read `references/router_template.md` and generate `{skill}/ROUTER.md` as the Phase 2 capability router. The template's `[MANDATORY]` routing requirements and pre-write checklist are acceptance criteria: revise the routing table before writing if any item fails.
+
+Each `{skill}/ROUTER.md` must:
+- Route from that skill to every skill-specific leaf generated for it
+- Cover Shared-similar capabilities as separate skill-owned leaves, with concrete disambiguating signals
+- If a Shared-identical capability is stored under `shared/`, make that capability reachable either through an explicit ROOT.md shared row or an explicit router row such as `Read ../shared/{capability}/SKILL.md`; record the chosen path in `SKILL-TREE.md`
+
 ### Mode 2 Step C2: Generate Leaf SKILL.md Files
 
-对每个叶节点，按照 `references/error_handling.md` 的完整规则生成：
+按 `references/error_handling.md` 完整规则生成，三步硬闸门：
 
-1. **前置检查**: Step A 已确认源技能存在 → 直接提取完整内容。如局部内容缺失 → 按 Degraded 级别生成 `[AUTO-GENERATED FALLBACK]` 回退
-2. **引用文件处理**: 执行 Step R1-R4。Multi-Skill 场景下多个源技能的引用文件需统一处理。大文件集（>5 files / >50KB）使用 staging + 平台原生命令拷贝，禁止 Write 逐文件写入
-3. **自包含**: 遵循 Self-Containment Rule，生成后的 skill tree 完全独立于源技能；短引用内联，大文件集可使用 tree 内部相对路径引用。源 skill 路径只能写入 `GENERATION-REPORT.md` 作为审计信息，不得写入叶节点作为运行时指令入口
-4. **【强制】Pre-Write Content Completeness Check**: 在 Write 每个叶节点之前，**重新读取源 skill 文件**。按叶节点类型分别执行：
+1. **前置检查** — 源技能可用性：不存在/空内容 → Fatal 终止；局部缺失 → Degraded 回退。
+2. **自包含迁移** — 在源技能整体可用的前提下，完整执行 `references/error_handling.md`：R1-R4（盘点→决策→清理→验证）+ Self-Containment Rule。Write 前必须盘点源技能包中被源技能内容引用、或执行所必需的运行时资源；按 R2 决定内联、拷贝到 tree 内，或删除/替换不可用引用。不得机械迁入所有非 SKILL.md 文件；拷贝范围、过滤规则和大文件集处理以 `error_handling.md` 为准。
+3. **【强制】Pre-Write Content Completeness Check**: 在 Write 每个叶节点之前，**重新读取源 skill 文件**，逐字保留源正文（除 YAML frontmatter）。行数差异写入 GENERATION-REPORT.md 并证明无内容丢失。按叶节点类型分别执行：
 
    **独立叶节点（源 skill 不拆分，1 源 → 1 叶）**：
-   - 除 YAML frontmatter 外，源 skill 的全部内容必须逐字迁入叶节点
+   - 源 skill 的全部内容必须逐字迁入叶节点
    - **不接受任何内容损失**：行数应等于（源 skill − frontmatter + 叶节点新增头部）
    - 禁止"简化"、"概括"、"保留框架"——每个代码块、表格、清单、约束、格式化规则全部逐字保留
 
    **拆分型叶节点（1 源 → 多个子叶）**：
+   - 先建 source section → leaf mapping 表
    - 每个子叶包含对应能力的完整内容
    - 所有子叶的内容总和必须覆盖源 skill 全部章节
    - 若某子叶偏移量异常（单叶比预期源子段短 >30%），逐段排查
@@ -262,7 +265,6 @@ Example:
 # e.g. Claude Code:  /skill-tree-generator --update .claude/skills/coding-tree --add angular
 # e.g. Codex CLI:    /skill-tree-generator --update .agent/skills/coding-tree --add angular
 # e.g. ZCode:        /skill-tree-generator --update .zcode/skills/coding-tree --add angular
-```
 
 ### Mode 3 Step A: Detect Single-Skill or Multi-Skill
 
@@ -369,7 +371,7 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 2. **Build comparison matrix** against existing skills (same as Mode 2 Step A)
 3. **Identify new shared keywords** — any capability overlapping with existing skills
 4. **Update ROOT.md** — add new skill route + update 多意图路由规则 and 消歧规则 for ALL new shared keywords. Ensure prompts mentioning the new skill plus existing skills can preserve multiple matched route paths.
-5. **Create new skill sub-tree** — `{new-skill}/ROUTER.md` + leaf SKILL.md files。执行 `references/error_handling.md` 中的**Reference File Processing Flow** Step R1-R4，遵循 **Self-Containment Rule**。大文件集使用 staging + 平台原生命令拷贝，禁止 Write 逐文件写入
+5. **Create new skill sub-tree** — `{new-skill}/ROUTER.md` + leaf SKILL.md files。执行 `references/error_handling.md` 中的**Reference File Processing Flow** Step R1-R4，遵循 **Self-Containment Rule**。大文件集**必须**使用 staging + 平台原生命令拷贝，禁止 Write 逐文件写入。**必须**执行源技能目录全量盘点（同 Mode 2 Step C2 的自包含迁移要求）
 6. **Re-check shared leaves** — if new skill has identical capabilities, update shared leaf
 7. **Update cross-cutting/SKILL.md** — add cross-skill workflow definitions + update dependencies (L7: most commonly missed step)
 8. **Update SKILL-TREE.md** — add rows to mapping table + update coverage stats

@@ -258,6 +258,15 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 ## Multi-Skill 额外检查 (仅 Multi-Skill 树)
 
+### Check M0: Skill Subtree Router Presence
+
+- 对每个非 shared、非 cross-cutting 的 skill 子树，确认存在 `{skill}/ROUTER.md`
+- 确认每个 `{skill}/ROUTER.md` 使用 Phase 2 能力路由，且至少覆盖该 skill 的所有 skill-specific / Shared-similar 叶节点
+- 如果该 skill 的 Shared-identical 能力存放在 `shared/`，确认它可通过 ROOT.md 共享行或 `{skill}/ROUTER.md` 显式行追踪到 `shared/{capability}/SKILL.md`
+- 手动追踪每个 `{skill}/ROUTER.md` 的 fallback 行，确认 fallback 最后且指向存在的 leaf
+
+**通过标准**: 每个 skill 子树都有可执行的 Phase 2 ROUTER.md；ROOT.md 命中任何 skill 后，都能继续追踪到一个或多个 leaf/shared leaf。
+
 ### Check M1: Shared Keyword Coverage
 
 - 列出 2+ 个 skill 共有的所有能力
