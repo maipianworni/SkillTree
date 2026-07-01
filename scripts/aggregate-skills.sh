@@ -75,7 +75,7 @@ while IFS= read -r -d '' file; do
 
     echo "  - $skill_name"
     SKILL_NAMES+=("$skill_name")
-done < <(find "$SKILL_DIR" -name "SKILL.md" -print0 2>/dev/null | sort -z)
+done < <(find "$SKILL_DIR" -maxdepth 2 -name "SKILL.md" -print0 2>/dev/null | sort -z)
 
 count=${#SKILL_NAMES[@]}
 

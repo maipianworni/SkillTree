@@ -68,7 +68,7 @@
 | 中文参考段落 | `参考文档索引`、`参考资料`、`相关文档`、`扩展阅读` |
 | 英文参考段落 | `Reference Documents`、`References`、`See Also`、`Further Reading`、`Related Documents`、`External References` |
 | 外部指针短语 | `For more details, see`、`Additional resources`、`Refer to`、`See {path}`、`Read {path}`、`Full Instructions: Read`、`Read the skill at` |
-| tree 外部绝对路径 | `(\.claude|\.agent|\.openclaw)/skills/(?!.*-tree/)|~/.openclaw/workspace/skills/|~/core_skills/|~/openclaw/node_modules/openclaw/skills/`（匹配常见 agent 源 skill 目录，但不匹配 tree 内部相对路径） |
+| tree 外部绝对路径 | `(\.claude\|\.agent\|\.openclaw)/skills/(?!.*-tree/)\|~/.openclaw/workspace/skills/\|~/core_skills/\|~/openclaw/node_modules/openclaw/skills/`（匹配常见 agent 源 skill 目录，但不匹配 tree 内部相对路径） |
 
 **R3.2 Three-step handling per reference entry**：
 

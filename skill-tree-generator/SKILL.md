@@ -233,6 +233,8 @@ Each `{skill}/ROUTER.md` must:
 
 ROOT.md must implement two-phase routing. Read `references/root_template.md` Multi-Skill section and generate ROOT.md following that template.
 
+Before writing ROOT.md, execute `references/root_template.md` → **Pre-Write Routing Signal Preparation [MANDATORY]**. Treat it as part of Step D's acceptance criteria, not an optional post-check.
+
 **Multi-intent requirement**: Generated Multi-Skill ROOT.md must support one prompt matching multiple route paths. When a prompt contains multiple independent intents, multiple skill names, multiple unique domain terms, or multiple separable subtasks, the router must split the prompt into subtasks and preserve every matched Skill/leaf route. Use `cross-cutting/SKILL.md` only when the matched paths need workflow coordination, sequencing, or data handoff; otherwise route into all matched skill subtrees directly.
 
 ### Mode 2 Step E: Multi-Skill SKILL-TREE.md Overview
@@ -265,6 +267,7 @@ Example:
 # e.g. Claude Code:  /skill-tree-generator --update .claude/skills/coding-tree --add angular
 # e.g. Codex CLI:    /skill-tree-generator --update .agent/skills/coding-tree --add angular
 # e.g. ZCode:        /skill-tree-generator --update .zcode/skills/coding-tree --add angular
+```
 
 ### Mode 3 Step A: Detect Single-Skill or Multi-Skill
 
@@ -348,6 +351,7 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
    - Add `[L2]` level marker
    - Preserve all routing conditions and context hints
 4. **Rewrite ROOT.md** to Multi-Skill format (follow Mode 2 Step D template):
+   - Execute `references/root_template.md` → **Pre-Write Routing Signal Preparation [MANDATORY]** for the existing skill and the new skill before writing route rows
    - Phase 1: 选一个或多个 Skill — includes both existing skill and new skill, and preserves multi-intent matches
    - Phase 2: 选能力 — delegates to every matched skill sub-tree ROUTER.md
    - Add 多意图路由规则 section
@@ -370,7 +374,7 @@ When adding a different skill to a Single-Skill tree, the tree must be restructu
 1. **Analyze new skill** — extract full capability set。执行 `references/error_handling.md` 中的**Error Severity & Handling Strategy**：源技能不存在 → Fatal 报错终止
 2. **Build comparison matrix** against existing skills (same as Mode 2 Step A)
 3. **Identify new shared keywords** — any capability overlapping with existing skills
-4. **Update ROOT.md** — add new skill route + update 多意图路由规则 and 消歧规则 for ALL new shared keywords. Ensure prompts mentioning the new skill plus existing skills can preserve multiple matched route paths.
+4. **Update ROOT.md** — execute `references/root_template.md` → **Pre-Write Routing Signal Preparation [MANDATORY]** for the new skill and any affected existing/shared routes, then add new skill route + update 多意图路由规则 and 消歧规则 for ALL new shared keywords. Ensure prompts mentioning the new skill plus existing skills can preserve multiple matched route paths.
 5. **Create new skill sub-tree** — `{new-skill}/ROUTER.md` + leaf SKILL.md files。执行 `references/error_handling.md` 中的**Reference File Processing Flow** Step R1-R4，遵循 **Self-Containment Rule**。大文件集**必须**使用 staging + 平台原生命令拷贝，禁止 Write 逐文件写入。**必须**执行源技能目录全量盘点（同 Mode 2 Step C2 的自包含迁移要求）
 6. **Re-check shared leaves** — if new skill has identical capabilities, update shared leaf
 7. **Update cross-cutting/SKILL.md** — add cross-skill workflow definitions + update dependencies (L7: most commonly missed step)
@@ -393,7 +397,7 @@ Reference templates are available in `references/`:
 - `overview_template.md` - SKILL-TREE.md overview template
 - `validation_template.md` - Executable validation checklist (MUST run after generation)
 - `error_handling.md` - Error Handling, Reference File Processing, Self-Containment Rule (Unified Specification)
-- `lessons_learned.md` - Lessons Learned（L1-L15）
+- `lessons_learned.md` - Lessons Learned（L1-L20）
 
 ## Example
 
@@ -444,3 +448,7 @@ web-development-tree/
 | L14 | 引用文件未内联/拷贝 | 已制度化 → `references/error_handling.md` |
 | L15 | 参考文档索引未清理 | 已制度化 → `references/error_handling.md` |
 | L16 | Multi-Skill 多意图被吞并 | Multi-Skill ROOT 必须保留多个命中路径 |
+| L17 | 技术实现视角过重 | ROOT/ROUTER 必须补充用户自然语言信号 |
+| L18 | 用户动作词覆盖不均 | 对有对应能力的域执行动作词覆盖检查 |
+| L19 | 元查询与执行混淆 | "找 XX 技能"默认进 discovery，具体执行对象才并行执行 |
+| L20 | 关键词被当穷举清单 | 模板必须声明语义匹配和代表性信号 |

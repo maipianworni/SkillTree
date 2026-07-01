@@ -4,6 +4,25 @@ This template defines the root-level routing protocol for a skill-tree.
 
 ---
 
+## Pre-Write Routing Signal Preparation [MANDATORY]
+
+Before writing any ROOT.md, prepare routing signals from the user's point of view. This is an acceptance criterion for both Single-Skill and Multi-Skill ROOT generation.
+
+1. Read each source skill's `description`, workflow examples, constraints, and any routing-relevant source text.
+2. Extract route signals from user-facing dimensions:
+   - **任务对象**：用户要创建、查询、修改、分析、发送、部署、转换或操作的对象
+   - **用户动作**：用户常用动词、同义表达、口语表达，以及中英文别名
+   - **输入/上下文**：文件类型、数据类型、平台、服务、设备、账号、权限或已有项目状态
+   - **功能场景/期望结果**：自然语言需求、权限/协作模式、交付物、可见输出、状态变化、访问方式、质量要求或完成标准
+   - **隐含能力**：为了达成期望结果通常必须考虑的下游能力；只有当源 skill、用户目标或对话上下文支持时，才生成多路由，不要把某个领域的常见配套能力硬编码为所有 tree 的强制规则
+3. Ensure each non-fallback ROOT route has at least one natural-language user-facing signal. Technical terms, internal API names, product names, and exact skill names may supplement the route, but must not be the only signal unless the skill is only validly invoked by that exact name.
+4. If the tree includes a skill discovery / find-skills capability, add a meta-query disambiguation rule: "find/recommend/install a skill for XX" routes to discovery with `XX` as query parameter by default; only preserve an execution route in parallel when the prompt also requests immediate processing/conversion/execution of a concrete file, object, or task.
+5. Do not invent unsupported domain facts. If a useful user-facing signal cannot be grounded in the source skill or common domain wording, mark it `[待补充]` in generation notes instead of fabricating it.
+
+These expanded signals are for routing recall only. Actual execution still belongs to downstream ROUTER.md / SKILL.md files, which must preserve multi-match routing and disambiguation.
+
+---
+
 ## Template
 
 ```markdown
@@ -11,7 +30,7 @@ This template defines the root-level routing protocol for a skill-tree.
 在处理任何用户任务之前，必须执行以下路由流程：
 
 ## Step 1: L1 路由
-基于用户的 **完整对话历史 + 当前prompt**，判断任务类别。
+基于用户的 **完整对话历史 + 当前prompt**，语义理解用户想要完成什么任务（而非机械匹配关键词），判断任务类别。
 
 | 任务类别 | 路由目标 |
 |---------|---------|
@@ -67,12 +86,15 @@ This template defines the root-level routing protocol for a skill-tree.
 在处理任何用户任务之前，必须执行以下路由流程：
 
 ## Phase 1: 选一个或多个 Skill
-基于用户的 **完整对话历史 + 当前 prompt**，判断需要使用哪个或哪些 Skill。一个 prompt 可以包含多个独立意图；当多个意图分别命中不同 skill 或 capability 时，必须保留所有命中的路由路径，不要只选择单一路径。
+基于用户的 **完整对话历史 + 当前 prompt**，语义理解用户想要完成什么任务（而非机械匹配关键词），判断需要使用哪个或哪些 Skill。一个 prompt 可以包含多个独立意图；当多个意图分别命中不同 skill 或 capability 时，必须保留所有命中的路由路径，不要只选择单一路径。
 
-| 用户意图 | 关键词信号 | 路由目标 |
+> 路由方式：语义匹配。`代表性关键词信号` 是帮助召回的示例，不是穷举清单。用户可能用同义词、口语、拆分式表达或业务目标描述同一意图；应识别真实任务目标，而不是要求字面命中。
+
+| 用户意图（用户想要完成什么任务） | 代表性关键词信号 | 路由目标 |
 |---------|-----------|---------|
 | {Skill_A 能力描述} | {Skill_A 特有词}, {Skill名A} | Read `./{skill_a}/ROUTER.md` |
 | {Skill_B 能力描述} | {Skill_B 特有词}, {Skill名B} | Read `./{skill_b}/ROUTER.md` |
+| Skill 发现/元查询（仅当树中包含 find/discovery 类 skill 时启用） | 找技能, 推荐技能, 有没有做XX的技能, 查找/安装 skill | Read `./{discovery_skill}/ROUTER.md` |
 | 共享功能 | {shared signals} | Read `./shared/{capability}/SKILL.md` |
 | 多意图 / 多 Skill 组合 | 同时出现多个 skill 名称、多个唯一领域词、或多个可分解子任务 | Read all matched `./{skill}/ROUTER.md` paths, or Read `./cross-cutting/SKILL.md` when execution requires workflow coordination |
 | 跨 Skill 工作流 | workflow, pipeline, 批量, 串联, 组合 | Read `./cross-cutting/SKILL.md` |
@@ -91,6 +113,7 @@ This template defines the root-level routing protocol for a skill-tree.
 ## 消歧规则
 - 提到 **{Skill名A}** 或 **{Skill_A 唯一领域词}** → `{skill_a}/`
 - 提到 **{Skill名B}** 或 **{Skill_B 唯一领域词}** → `{skill_b}/`
+- 如果存在 Skill 发现/元查询能力：用户表达 **"找/推荐/安装/有没有 XX 技能"** 时，默认路由到 discovery skill，`XX` 作为查询参数；仅当用户同时明确要求“现在处理/转换/执行某个具体文件或任务对象”时，才把 `XX` 对应的执行能力作为独立路由并行保留。
 - 仅提到 **"{共享关键词}"** 无上下文 → 询问用户选择
 - 对话中已建立 Skill 上下文 → 不再重新选 Skill，直接进入其子树
 
@@ -104,7 +127,7 @@ This template defines the root-level routing protocol for a skill-tree.
 | **P2** | 唯一领域词 | 直接路由，不询问 | "undo/撤销" → 唯一确定某 skill |
 | **P3 最低** | 跨领域通用词 | 仅在无 P1/P2 时才询问 | 仅"新建"无上下文 → 询问 |
 
-**优先级规则**: P1 > P2 > P3。当 P2 和 P3 同时出现在同一个子任务中时，P2 覆盖 P3，不询问。若 prompt 包含多个子任务，先拆分子任务，再在每个子任务内部应用优先级；不得因为某个子任务有 P1/P2 信号而丢弃其他子任务的路由命中。
+**优先级规则**: P1 > P2 > P3。当 P2 和 P3 同时出现在同一个子任务中时，P2 覆盖 P3，不询问。若 prompt 包含多个子任务，先拆分子任务，再在每个子任务内部应用优先级；不得因为某个子任务有 P1/P2 信号而丢弃其他子任务的路由命中。元查询意图（如“找个 XX 技能”）包裹能力词时，能力词默认是查询参数，不是独立执行路由；只有出现具体对象/文件/任务和执行动词时才并行保留执行路由。
 
 ## 路由追踪 [可选]
 
@@ -134,15 +157,3 @@ This template defines the root-level routing protocol for a skill-tree.
 - `list` / `info` — 几乎每个 skill 都有查询能力
 - `config` / `配置` — 可能涉及不同 skill 的不同配置
 - `test` / `测试` — 前端测试 vs 后端测试 vs 集成测试
-
-## 用户意图扩展检查
-
-生成 ROOT.md 时，关键词信号必须覆盖用户自然会说的目标词，而不只是源 skill 的技术名词。对每个域至少从源 skill 的描述、工作流、示例和约束中提取：
-
-- **任务对象**：用户要创建、查询、修改、分析、发送、部署、转换或操作的对象
-- **用户动作**：用户常用动词、同义表达、口语表达，以及中英文别名
-- **输入/上下文**：文件类型、数据类型、平台、服务、设备、账号、权限或已有项目状态
-- **期望结果**：交付物、可见输出、状态变化、访问方式、质量要求或完成标准
-- **隐含能力**：为了达成期望结果通常必须同时命中的下游能力
-
-这些扩展词只用于路由召回；真正执行仍由下级 ROUTER.md 保留多命中并消歧。不要把某个具体业务场景硬编码为通用模板，除非它来自源 skill 示例或目标领域的高频真实用法。

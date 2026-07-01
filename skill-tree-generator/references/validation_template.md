@@ -167,6 +167,39 @@ This applies to ALL tasks: research, code, editing, questions — everything.
 
 ---
 
+### Check 8A: Semantic Signal Coverage (语义信号覆盖)
+
+- ROOT.md 和每个 ROUTER.md 的非 fallback 路由必须包含用户自然会说的信号，而不只是技术术语、产品/API 名称、目录名或 skill 名称。
+- 关键词/信号列必须被表述为代表性示例或语义召回种子，而不是穷举匹配清单。
+- 隐含能力路由必须有来源依据：源 skill 描述、工作流示例、用户目标、对话上下文或领域高频用法。
+
+**操作步骤**:
+1. 读取 ROOT.md，检查 Step 1 / Phase 1 是否包含“语义理解/语义匹配/代表性关键词信号”之类的明确指令。
+2. 对 ROOT.md 每条非 fallback 路由，标注至少一个用户会说的自然语言信号。
+3. 对每个 ROUTER.md 的非 fallback 路由重复第 2 步。
+4. 找出只有技术词、产品名、API 名、目录名或 skill 名的路由行，并补充用户视角信号。
+5. 对任何多读/隐含能力路由，记录其依据；若依据不足，改为更窄的单路由或询问用户。
+
+**通过标准**: ROOT.md 声明语义匹配；每条非 fallback 路由至少包含一个用户视角信号；所有隐含能力多路由都有可审计依据。
+
+---
+
+### Check 8B: Meta-query vs Execution Disambiguation (元查询/执行消歧)
+
+仅当 tree 中包含 skill discovery / find-skills / install-skill 类能力时执行本检查；否则记录为 `NOT_APPLICABLE`。
+
+**操作步骤**:
+1. 确认 ROOT.md 存在 Skill 查找/发现/安装类意图行。
+2. 确认该意图行或消歧规则明确区分：
+   - “找/推荐/安装一个能做 XX 的技能” → discovery skill，`XX` 是查询参数。
+   - “现在帮我处理/转换/执行这个具体文件、对象或任务” → 对应执行 skill。
+   - 同时包含找技能和具体执行对象 → 保留 discovery + execution 多路由。
+3. 构造至少 3 个测试 prompt：纯找技能、纯执行、找技能+具体执行对象，并手动追踪预期路径。
+
+**通过标准**: 纯元查询不会被能力词误路由到执行 skill；包含具体执行对象和执行动词时能保留并行执行路径。
+
+---
+
 ### Check 9: Content Preservation (内容保留)
 
 - 确认源 skill 中的所有内容在叶节点中都有保留
